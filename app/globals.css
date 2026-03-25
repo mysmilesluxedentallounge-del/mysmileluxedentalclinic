@@ -7,9 +7,16 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-inter);
+  --font-heading: var(--font-playfair);
+  --font-inter: var(--font-inter);
+  --font-playfair: var(--font-playfair);
+  --color-brand-teal: var(--brand-teal);
+  --color-brand-teal-dark: var(--brand-teal-dark);
+  --color-brand-gold: var(--brand-gold);
+  --color-brand-gold-light: var(--brand-gold-light);
+  --color-brand-cream: var(--brand-cream);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,6 +56,18 @@
 }
 
 :root {
+  --yellow-light: #ffcf80;
+  --yellow-mid: #ffc566;
+  --yellow-lightest: #fff3d6;
+  --grey-light: #f2f2f2;
+  --grey-mid: #7a7a7a;
+  --grey-dark: #3d3d3d;
+  --brand-dark: #2c2c2c;
+  --brand-cream: #fff9ef;
+  --brand-teal: #ffc566;
+  --brand-teal-dark: #2c2c2c;
+  --brand-gold: #ffc566;
+  --brand-gold-light: #ffcf80;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -127,4 +146,27 @@
   html {
     @apply font-sans;
   }
+}
+
+@keyframes gallery-scroll-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes gallery-scroll-right {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+.gallery-track-left {
+  animation: gallery-scroll-left 30s linear infinite;
+}
+
+.gallery-track-right {
+  animation: gallery-scroll-right 28s linear infinite;
+}
+
+.gallery-track-left:hover,
+.gallery-track-right:hover {
+  animation-play-state: paused;
 }
