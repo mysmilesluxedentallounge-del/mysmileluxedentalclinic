@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Award, GraduationCap, Trophy } from "lucide-react";
+import StatNumber from "./StatNumber";
 
 const credentials = [
   {
@@ -25,10 +26,10 @@ const credentials = [
 ];
 
 const stats = [
-  { value: "2,000+", label: "Root Canals" },
-  { value: "5,000+", label: "Procedures" },
-  { value: "7+", label: "Years Exp." },
-  { value: "AIR 526", label: "NEET Rank" },
+  { end: 2000, suffix: "+", format: true,  label: "Root Canals" },
+  { end: 5000, suffix: "+", format: true,  label: "Procedures" },
+  { end: 7,    suffix: "+", format: false, label: "Years Exp." },
+  { end: 526,  prefix: "AIR ", suffix: "", format: false, label: "NEET Rank" },
 ];
 
 export default function DoctorProfile() {
@@ -88,15 +89,15 @@ export default function DoctorProfile() {
             <div className="absolute -bottom-8 -right-4 md:-right-8 bg-white rounded-2xl shadow-2xl p-5 grid grid-cols-2 gap-4 w-56">
               {stats.map((s) => (
                 <div key={s.label} className="text-center">
-                  <div
+                  <StatNumber
+                    end={s.end}
+                    prefix={s.prefix ?? ""}
+                    suffix={s.suffix}
+                    format={s.format}
+                    duration={2200}
                     className="text-xl font-bold"
-                    style={{
-                      color: "var(--brand-dark)",
-                      fontFamily: "var(--font-playfair)",
-                    }}
-                  >
-                    {s.value}
-                  </div>
+                    style={{ color: "var(--brand-dark)", fontFamily: "var(--font-playfair)", display: "block" }}
+                  />
                   <div className="text-xs text-gray-400 mt-0.5">{s.label}</div>
                 </div>
               ))}

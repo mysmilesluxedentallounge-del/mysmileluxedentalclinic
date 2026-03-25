@@ -26,6 +26,13 @@ export const metadata: Metadata = {
     "MySmile Lux Dental Lounge",
     "Dr Shridha Prabhu",
   ],
+  icons: {
+    icon: [
+      { url: "/icon.png", sizes: "any", type: "image/png" },
+    ],
+    apple: "/icon.png",
+    shortcut: "/icon.png",
+  },
 };
 
 export default function RootLayout({

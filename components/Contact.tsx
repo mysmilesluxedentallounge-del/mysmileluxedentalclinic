@@ -6,21 +6,42 @@ import { Phone, Mail, MapPin, Clock, Send, AtSign } from "lucide-react";
 export default function Contact() {
   const [form, setForm] = useState({
     name: "",
+    email: "",
     phone: "",
+    gender: "",
     date: "",
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/send-appointment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Something went wrong.");
+      }
+      setSubmitted(true);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,8 +89,9 @@ export default function Contact() {
                   Request Received!
                 </h3>
                 <p className="text-gray-500 text-sm max-w-xs">
-                  Thank you! Our team will call you shortly to confirm your
-                  appointment.
+                  Thank you! A confirmation receipt has been sent to{" "}
+                  <span className="font-semibold text-gray-700">{form.email}</span>.
+                  Our team will also call you shortly to confirm your slot.
                 </p>
               </div>
             ) : (
@@ -94,17 +116,50 @@ export default function Contact() {
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Gender *
+                    </label>
+                    <select
+                      name="gender"
+                      required
+                      value={form.gender}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all bg-white text-gray-700"
+                    >
+                      <option value="" disabled>Select gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      required
+                      value={form.phone}
+                      onChange={handleChange}
+                      placeholder="Mobile number"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all"
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Phone Number *
+                    Email Address *
                   </label>
                   <input
-                    type="tel"
-                    name="phone"
+                    type="email"
+                    name="email"
                     required
-                    value={form.phone}
+                    value={form.email}
                     onChange={handleChange}
-                    placeholder="Your mobile number"
+                    placeholder="your@email.com"
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all"
                   />
                 </div>
@@ -136,13 +191,17 @@ export default function Contact() {
                   />
                 </div>
 
+                {error && (
+                  <p className="text-red-500 text-sm text-center">{error}</p>
+                )}
                 <button
                   type="submit"
-                  className="w-full py-4 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 hover:shadow-lg"
+                  disabled={loading}
+                  className="w-full py-4 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                   style={{ backgroundColor: "var(--yellow-mid)", color: "var(--brand-dark)" }}
                 >
                   <Send size={16} />
-                  Send Request
+                  {loading ? "Sending…" : "Book Appointment"}
                 </button>
               </form>
             )}
