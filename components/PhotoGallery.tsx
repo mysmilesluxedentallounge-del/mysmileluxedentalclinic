@@ -44,17 +44,18 @@ export default function PhotoGallery() {
             className="text-sm font-semibold tracking-[0.2em] uppercase"
             style={{ color: "var(--yellow-mid)" }}
           >
-            Our Celebrity Clients
+            Industry Professionals
           </span>
           <h2
             className="mt-3 text-4xl md:text-5xl font-bold text-white"
             style={{ fontFamily: "var(--font-playfair)" }}
           >
-            Celebrity Interactions
+            Serving Indian Cinema&apos;s Finest
           </h2>
-          <p className="mt-4 text-base max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.6)" }}>
-            Trusted by stars — Dr. Shridha Prabhu&apos;s expertise and care has won
-            the smiles of some of India&apos;s most celebrated personalities.
+          <p className="mt-4 text-base max-w-2xl mx-auto" style={{ color: "rgba(255,255,255,0.6)" }}>
+            Dr. Shridha Prabhu has had the privilege of serving some of Indian
+            cinema&apos;s most celebrated actors and actresses — an honour that reflects
+            the trust, care, and clinical excellence she brings to every patient.
           </p>
         </div>
 

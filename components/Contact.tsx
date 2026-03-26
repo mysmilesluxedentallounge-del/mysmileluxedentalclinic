@@ -215,7 +215,7 @@ export default function Contact() {
                 {
                   icon: Phone,
                   label: "Call Us",
-                  value: "6304693676",
+                  value: "+91 6304693676",
                   href: "tel:6304693676",
                 },
                 {
@@ -230,18 +230,6 @@ export default function Contact() {
                   value:
                     "Level 2, SLN Terminus Mall, Gachibowli, Hyderabad 500032",
                   href: "https://maps.google.com/?q=SLN+Terminus+Mall+Gachibowli+Hyderabad",
-                },
-                {
-                  icon: Clock,
-                  label: "Availability",
-                  value: "24×7 Care & Response",
-                  href: null,
-                },
-                {
-                  icon: AtSign,
-                  label: "Instagram",
-                  value: "@mysmileluxdentallounge",
-                  href: "https://instagram.com/mysmileluxdentallounge",
                 },
               ].map((item) => {
                 const Icon = item.icon;
@@ -285,7 +273,7 @@ export default function Contact() {
             </div>
 
             {/* Map embed placeholder */}
-            <div className="rounded-2xl overflow-hidden border border-gray-200 h-48 bg-gray-100 flex items-center justify-center">
+            <div className="rounded-2xl overflow-hidden border border-gray-200 h-75 bg-gray-100 flex items-center justify-center">
               <iframe
                 title="MySmile Lux Dental Lounge Location"
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3807.2537090026893!2d78.36050!3d17.44360!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb93e7ad8c3a1b%3A0x1a2b3c4d5e6f7a8b!2sSLN+Terminus+Mall%2C+Gachibowli!5e0!3m2!1sen!2sin!4v1234567890"

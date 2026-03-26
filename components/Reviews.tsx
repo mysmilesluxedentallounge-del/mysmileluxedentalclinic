@@ -2,13 +2,17 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Star, ChevronUp, ChevronDown, Volume2, VolumeX } from "lucide-react";
+import { Star, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Volume2, VolumeX } from "lucide-react";
 
 const mediaItems = [
-  { type: "video" as const, src: "/testimonials/Client Video.mp4", label: "Client Story" },
-  { type: "image" as const, src: "/testimonials/firstclient.jpeg", label: "Client Smile" },
+  { type: "video" as const, src: "/testimonials/clientVideo1.mp4", label: "Client Story" },
+  { type: "video" as const, src: "/testimonials/clientVideo2.mp4", label: "Client Smile" },
+  { type: "video" as const, src: "/testimonials/clientVideo3.mp4", label: "Client Story" },
   { type: "image" as const, src: "/testimonials/beforeAndAfter.jpeg", label: "Before & After" },
-  { type: "image" as const, src: "/testimonials/client2.jpeg", label: "Happy Patient" },
+  { type: "image" as const, src: "/testimonials/firstclient.jpeg", label: "Client Smile" },
+  { type: "image" as const, src: "/testimonials/beforeAndAfter2.jpeg", label: "Before & After" },
+  { type: "image" as const, src: "/testimonials/beforeAndAfter3.jpeg", label: "Before & After" },
+  { type: "image" as const, src: "/testimonials/beforeAndAfter2.jpeg", label: "Before & After" },
 ];
 
 type ReviewLength = "short" | "medium" | "long";
@@ -172,8 +176,8 @@ export default function Reviews() {
   const totalPages = Math.ceil(reviews.length / reviewsPerPage);
   const [reviewPage, setReviewPage] = useState(0);
 
-  const prev = useCallback(() => setCurrent((c) => (c - 1 + total) % total), [total]);
-  const next = useCallback(() => setCurrent((c) => (c + 1) % total), [total]);
+  const prev = useCallback(() => { setCurrent((c) => (c - 1 + total) % total); setMuted(true); }, [total]);
+  const next = useCallback(() => { setCurrent((c) => (c + 1) % total); setMuted(true); }, [total]);
 
   useEffect(() => {
     if (paused) return;
@@ -250,7 +254,7 @@ export default function Reviews() {
                     ref={i === safeCurrent ? videoRef : undefined}
                     src={item.src}
                     autoPlay
-                    muted={muted}
+                    muted={i !== safeCurrent ? true : muted}
                     loop
                     playsInline
                     className="w-full h-full object-cover"
@@ -276,7 +280,7 @@ export default function Reviews() {
                     className="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-2"
                     style={{ backgroundColor: "var(--yellow-mid)", color: "var(--brand-dark)" }}
                   >
-                    {item.type === "video" ? "Client Story" : "Celebrity Visit"}
+                    {item.type === "video" ? "Client Story" : "Happy Client"}
                   </span>
                   <p
                     className="text-white font-bold text-lg"
@@ -313,7 +317,7 @@ export default function Reviews() {
               {mediaItems.map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => setCurrent(i)}
+                  onClick={() => { setCurrent(i); setMuted(true); }}
                   aria-label={`Slide ${i + 1}`}
                   className="rounded-full transition-all duration-300"
                   style={{
@@ -436,21 +440,41 @@ export default function Reviews() {
               </div>
             </div>
 
-            {/* Page dots */}
-            <div className="flex items-center justify-center gap-2">
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setReviewPage(i)}
-                  aria-label={`Page ${i + 1}`}
-                  className="rounded-full transition-all duration-300"
-                  style={{
-                    height: "7px",
-                    width: i === reviewPage ? "24px" : "7px",
-                    backgroundColor: i === reviewPage ? "var(--yellow-mid)" : "#d1d5db",
-                  }}
-                />
-              ))}
+            {/* Page controls: prev — dots — next */}
+            <div className="flex items-center justify-between gap-3">
+              <button
+                onClick={() => setReviewPage((p) => (p - 1 + totalPages) % totalPages)}
+                className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 flex-shrink-0"
+                style={{ backgroundColor: "var(--yellow-mid)", color: "var(--brand-dark)" }}
+                aria-label="Previous reviews"
+              >
+                <ChevronLeft size={17} />
+              </button>
+
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setReviewPage(i)}
+                    aria-label={`Page ${i + 1}`}
+                    className="rounded-full transition-all duration-300"
+                    style={{
+                      height: "7px",
+                      width: i === reviewPage ? "24px" : "7px",
+                      backgroundColor: i === reviewPage ? "var(--yellow-mid)" : "#d1d5db",
+                    }}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={() => setReviewPage((p) => (p + 1) % totalPages)}
+                className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 flex-shrink-0"
+                style={{ backgroundColor: "var(--yellow-mid)", color: "var(--brand-dark)" }}
+                aria-label="Next reviews"
+              >
+                <ChevronRight size={17} />
+              </button>
             </div>
           </div>
         </div>

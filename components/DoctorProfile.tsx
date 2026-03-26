@@ -80,7 +80,7 @@ export default function DoctorProfile() {
                   Dr. Shridha Prabhu
                 </p>
                 <p className="text-sm text-white/75">
-                  Founder &amp; Lead Dentist
+                  Founder &amp; Head of Organisation
                 </p>
               </div>
             </div>
@@ -113,7 +113,7 @@ export default function DoctorProfile() {
               <strong>seven years of clinical experience</strong>, she has
               transformed the dental experience for thousands of patients.
             </p>
-            <p className="text-gray-600 leading-relaxed mb-10 text-base">
+            <p className="text-gray-600 leading-relaxed mb-6 text-base">
               Her mission is to eliminate the stigma and fear associated with
               dental treatments by creating an approachable, comfortable, and
               luxurious environment — where every patient walks in anxious and
@@ -148,7 +148,7 @@ export default function DoctorProfile() {
               className="mt-10 inline-flex items-center gap-2 px-7 py-3 rounded-full text-sm font-semibold transition-all hover:opacity-90 hover:shadow-lg"
               style={{ backgroundColor: "var(--yellow-mid)", color: "var(--brand-dark)" }}
             >
-              Book with Dr. Shridha
+              Book an Appointment
             </a>
           </div>
         </div>
