@@ -77,7 +77,7 @@ export default function Services() {
   return (
     <section
       id="services"
-      className="py-28 relative overflow-hidden"
+      className="pt-10 pb-28 relative overflow-hidden"
       style={{ background: "#faf9f6" }}
     >
       {/* Ambient gold glow top */}
