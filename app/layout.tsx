@@ -15,15 +15,15 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "MySmile Lux Dental Lounge | Painless Dentistry in Gachibowli",
+  title: "MySmile Luxe Dental Lounge | Painless Dentistry in Gachibowli",
   description:
-    "MySmile Lux Dental Lounge — luxury dental care in SLN Terminus Mall, Gachibowli. Led by Dr. Shridha Prabhu, specialist in painless dentistry, smile designing & endodontics. Book your appointment today.",
+    "MySmile Luxe Dental Lounge — luxury dental care in SLN Terminus Mall, Gachibowli. Led by Dr. Shridha Prabhu, specialist in painless dentistry, smile designing & endodontics. Book your appointment today.",
   keywords: [
     "dental clinic Gachibowli",
     "painless dentistry Hyderabad",
     "root canal treatment",
     "smile designing",
-    "MySmile Lux Dental Lounge",
+    "MySmile Luxe Dental Lounge",
     "Dr Shridha Prabhu",
   ],
   icons: {
@@ -37,7 +37,22 @@ export const metadata: Metadata = {
       { url: "/favicon-180.png", sizes: "180x180", type: "image/png" },
     ],
     shortcut: "/favicon.ico",
+    other: [
+      {
+        rel: "icon",
+        url: "/android-chrome-192x192.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        rel: "icon",
+        url: "/android-chrome-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
+      },
+    ],
   },
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({

@@ -5,11 +5,11 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Star, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Volume2, VolumeX } from "lucide-react";
 
 const mediaItems = [
-  { type: "video" as const, src: "/testimonials/clientVideo1.mp4", label: "Client Story" },
-  { type: "video" as const, src: "/testimonials/clientVideo2.mp4", label: "Client Smile" },
-  { type: "video" as const, src: "/testimonials/clientVideo3.mp4", label: "Client Story" },
+  { type: "video" as const, src: "/testimonials/clientVideo1.mp4", label: "Patient Story" },
+  { type: "video" as const, src: "/testimonials/clientVideo2.mp4", label: "Patient Smile" },
+  { type: "video" as const, src: "/testimonials/clientVideo3.mp4", label: "Patient Story" },
   { type: "image" as const, src: "/testimonials/beforeAndAfter.jpeg", label: "Before & After" },
-  { type: "image" as const, src: "/testimonials/firstclient.jpeg", label: "Client Smile" },
+  { type: "image" as const, src: "/testimonials/firstclient.jpeg", label: "Patient Smile" },
   { type: "image" as const, src: "/testimonials/beforeAndAfter2.jpeg", label: "Before & After" },
   { type: "image" as const, src: "/testimonials/beforeAndAfter3.jpeg", label: "Before & After" },
   { type: "image" as const, src: "/testimonials/beforeAndAfter2.jpeg", label: "Before & After" },
@@ -280,7 +280,7 @@ export default function Reviews() {
                     className="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-2"
                     style={{ backgroundColor: "var(--yellow-mid)", color: "var(--brand-dark)" }}
                   >
-                    {item.type === "video" ? "Client Story" : "Happy Client"}
+                    {item.type === "video" ? "Patient Story" : "Happy Patient"}
                   </span>
                   <p
                     className="text-white font-bold text-lg"
