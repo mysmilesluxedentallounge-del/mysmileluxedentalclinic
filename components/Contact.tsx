@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Phone, Mail, MapPin, Clock, Send, AtSign } from "lucide-react";
+import { Phone, Mail, MapPin, Send } from "lucide-react";
 
 export default function Contact() {
   const [form, setForm] = useState({
@@ -9,9 +9,21 @@ export default function Contact() {
     email: "",
     phone: "",
     gender: "",
+    dob: "",
     date: "",
     message: "",
   });
+  const age = (() => {
+    if (!form.dob) return null;
+    const today = new Date();
+    const birth = new Date(form.dob);
+    if (isNaN(birth.getTime())) return null;
+    let years = today.getFullYear() - birth.getFullYear();
+    const months = today.getMonth() - birth.getMonth();
+    if (months < 0 || (months === 0 && today.getDate() < birth.getDate())) years--;
+    return years >= 0 ? years : null;
+  })();
+
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -119,6 +131,24 @@ export default function Contact() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      name="dob"
+                      value={form.dob}
+                      onChange={handleChange}
+                      max={new Date().toISOString().split("T")[0]}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all text-gray-700"
+                    />
+                    {age !== null && (
+                      <p className="mt-1.5 text-xs font-medium" style={{ color: "var(--brand-teal)" }}>
+                        Age: {age} year{age !== 1 ? "s" : ""} old
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Gender *
                     </label>
                     <select
@@ -133,20 +163,21 @@ export default function Contact() {
                       <option value="female">Female</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Phone Number *
-                    </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      required
-                      value={form.phone}
-                      onChange={handleChange}
-                      placeholder="Mobile number"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all"
-                    />
-                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    required
+                    value={form.phone}
+                    onChange={handleChange}
+                    placeholder="Mobile number"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all"
+                  />
                 </div>
 
                 <div>

@@ -4,7 +4,7 @@ import nodemailer from "nodemailer";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const { name, email, phone, gender, date, message } = await req.json();
+  const { name, email, phone, gender, dob, date, message } = await req.json();
 
   if (!name || !email || !phone) {
     return NextResponse.json(
@@ -97,6 +97,10 @@ export async function POST(req: NextRequest) {
                         <td style="padding:9px 0;border-bottom:1px solid #f0e8d6;font-size:12px;color:#999;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Gender</td>
                         <td style="padding:9px 0;border-bottom:1px solid #f0e8d6;font-size:13px;color:#1a1a1a;font-weight:700;text-transform:capitalize;">${gender || "Not specified"}</td>
                       </tr>
+                      ${dob ? `<tr>
+                        <td style="padding:9px 0;border-bottom:1px solid #f0e8d6;font-size:12px;color:#999;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Date of Birth</td>
+                        <td style="padding:9px 0;border-bottom:1px solid #f0e8d6;font-size:13px;color:#1a1a1a;font-weight:700;">${new Date(dob).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</td>
+                      </tr>` : ""}
                       <tr>
                         <td style="padding:9px 0;border-bottom:1px solid #f0e8d6;font-size:12px;color:#999;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Phone</td>
                         <td style="padding:9px 0;border-bottom:1px solid #f0e8d6;font-size:13px;color:#1a1a1a;font-weight:700;">${phone}</td>
