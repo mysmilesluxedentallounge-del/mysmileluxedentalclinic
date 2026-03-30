@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
           <!-- Header: white bg with logo -->
           <tr>
             <td style="background:#ffffff;padding:32px 40px 20px;text-align:center;border-bottom:3px solid #c9a84c;">
-              ${logoExists ? `<img src="cid:logo" alt="MySmile Lux Dental Lounge" width="200" style="display:block;margin:0 auto 0;max-width:200px;" />` : `<p style="margin:0;font-size:22px;font-weight:800;color:#c9a84c;letter-spacing:-0.3px;">MySmile Lux Dental Lounge</p>`}
+              ${logoExists ? `<img src="cid:logo" alt="MySmile Luxe Dental Lounge" width="200" style="display:block;margin:0 auto 0;max-width:200px;" />` : `<p style="margin:0;font-size:22px;font-weight:800;color:#c9a84c;letter-spacing:-0.3px;">MySmile Lux Dental Lounge</p>`}
             </td>
           </tr>
 
