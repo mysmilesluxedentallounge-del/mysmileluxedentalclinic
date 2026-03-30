@@ -2,75 +2,20 @@ import React from "react";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 
-type IconProps = { size?: number; color?: string; strokeWidth?: number };
 
-function ToothSVG({ size = 22, color = "currentColor" }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 3C7 3 5 5.5 5 8c0 2 .7 3.8 1.4 5.4L8.5 21c.2.8.8 1.3 1.5 1.3s1.3-.5 1.5-1.3l.5-2.5.5 2.5c.2.8.8 1.3 1.5 1.3s1.3-.5 1.5-1.3L17.6 13.4C18.3 11.8 19 10 19 8c0-2.5-2-5-5-5-1 0-1.8.4-2.4.9A4 4 0 0 0 9 3z" />
-    </svg>
-  );
-}
-
-function CrownSVG({ size = 22, color = "currentColor" }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 19h16" />
-      <path d="M4 19L5.5 8 9 13l3-8 3 8 3.5-5L21 19" />
-      <rect x="4" y="19" width="16" height="2.5" rx="1" />
-    </svg>
-  );
-}
-
-function DentalChairIcon({ size = 22 }: IconProps) {
-  return (
-    <Image src="/svgs/dentalchair.webp" alt="Dental Chair" width={size} height={size} className="object-contain" />
-  );
-}
-
-const categories: { icon: React.ComponentType<IconProps>; title: string; tagline: string; cta: string; accent: string; accentBg: string; services: { name: string; desc: string }[] }[] = [
-  {
-    icon: ToothSVG,
-    title: "Cosmetic Dentistry",
-    tagline: "Craft your perfect smile",
-    cta: "Transform My Smile",
-    accent: "#c9a84c",
-    accentBg: "rgba(201,168,76,0.07)",
-    services: [
-      { name: "Smile Designing",   desc: "Bespoke makeovers tailored to your face and personality." },
-      { name: "Veneers",           desc: "Ultra-thin porcelain shells for a flawless, natural finish." },
-      { name: "Teeth Whitening",   desc: "In-clinic whitening — brighter smile in under an hour." },
-      { name: "Cosmetic Fillings", desc: "Tooth-coloured fillings that disappear into your smile." },
-    ],
-  },
-  {
-    icon: CrownSVG,
-    title: "Restorative Dentistry",
-    tagline: "Rebuild strength & function",
-    cta: "Book Consultation",
-    accent: "#2c2c2c",
-    accentBg: "rgba(44,44,44,0.05)",
-    services: [
-      { name: "Implants",          desc: "Permanent titanium roots that look and feel completely natural." },
-      { name: "Crowns & Bridges",  desc: "Lifelike restorations that bring damaged teeth back to life." },
-      { name: "BPS Dentures",      desc: "Custom-fitted dentures with superior comfort and stability." },
-      { name: "Full Mouth Rehab",  desc: "Comprehensive reconstruction restoring full oral function." },
-    ],
-  },
-  {
-    icon: DentalChairIcon,
-    title: "General Dentistry",
-    tagline: "Prevention & everyday care",
-    cta: "Start Your Smile Journey",
-    accent: "#5a8a6a",
-    accentBg: "rgba(90,138,106,0.06)",
-    services: [
-      { name: "Teeth Cleaning",       desc: "Professional scaling and polishing for a fresh, healthy mouth." },
-      { name: "Painless Root Canals", desc: "2,000+ cases — single-visit, zero-pain rotary endodontics." },
-      { name: "Surgical Extractions", desc: "Expert removal with minimal recovery and expert aftercare." },
-      { name: "Laser Dentistry",      desc: "Precise laser treatments for gums, cavities, and whitening." },
-    ],
-  },
+const services: { name: string; desc: string; image: string; cta: string; accent: string; accentBg: string }[] = [
+  { name: "Smile Designing",      desc: "Bespoke makeovers tailored to your face and personality.",           image: "https://images.pexels.com/photos/3762453/pexels-photo-3762453.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Transform My Smile",       accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
+  { name: "Veneers",              desc: "Ultra-thin porcelain shells for a flawless, natural finish.",        image: "https://images.pexels.com/photos/6627284/pexels-photo-6627284.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Transform My Smile",       accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
+  { name: "Teeth Whitening",      desc: "In-clinic whitening — brighter smile in under an hour.",             image: "https://images.pexels.com/photos/5622271/pexels-photo-5622271.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Book Whitening Session",   accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
+  { name: "Cosmetic Fillings",    desc: "Tooth-coloured fillings that disappear into your smile.",            image: "https://images.pexels.com/photos/3845759/pexels-photo-3845759.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Book Consultation",        accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
+  { name: "Implants",             desc: "Permanent titanium roots that look and feel completely natural.",    image: "https://images.pexels.com/photos/4687905/pexels-photo-4687905.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Book Free Consultation",   accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
+  { name: "Crowns & Bridges",     desc: "Lifelike restorations that bring damaged teeth back to life.",       image: "https://images.pexels.com/photos/6502345/pexels-photo-6502345.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Book Consultation",        accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
+  { name: "BPS Dentures",         desc: "Custom-fitted dentures with superior comfort and stability.",        image: "https://images.pexels.com/photos/5355826/pexels-photo-5355826.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Book Consultation",        accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
+  { name: "Full Mouth Rehab",     desc: "Comprehensive reconstruction restoring full oral function.",         image: "https://images.pexels.com/photos/7788511/pexels-photo-7788511.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Start Rehabilitation",     accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
+  { name: "Teeth Cleaning",       desc: "Professional scaling and polishing for a fresh, healthy mouth.",    image: "https://images.pexels.com/photos/3845744/pexels-photo-3845744.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Book Cleaning",            accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
+  { name: "Painless Root Canals", desc: "2,000+ cases — single-visit, zero-pain rotary endodontics.",        image: "https://images.pexels.com/photos/7800562/pexels-photo-7800562.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Start Your Smile Journey", accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
+  { name: "Surgical Extractions", desc: "Expert removal with minimal recovery and expert aftercare.",         image: "https://images.pexels.com/photos/4687401/pexels-photo-4687401.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Book Consultation",        accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
+  { name: "Laser Dentistry",      desc: "Precise laser treatments for gums, cavities, and whitening.",       image: "https://images.pexels.com/photos/6629416/pexels-photo-6629416.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Explore Laser Dentistry",  accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
 ];
 
 export default function Services() {
@@ -121,85 +66,77 @@ export default function Services() {
           </p>
         </div>
 
-        {/* 3 category cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {categories.map((cat) => (
-            <div
-              key={cat.title}
-              className="group relative rounded-3xl overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-              style={{
-                background: "white",
-                border: "1px solid rgba(201,168,76,0.2)",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-              }}
-            >
-              {/* Coloured top band */}
+        {/* Category groups */}
+        <div className="space-y-4">
+          {services.map((s, i) => {
+            const flip = i % 2 === 1;
+            return (
               <div
-                className="h-1.5 w-full"
-                style={{ background: cat.accent }}
-              />
-
-              {/* Tooth watermark */}
-              <div className="absolute -bottom-4 -right-4 w-28 h-28 opacity-[0.04] pointer-events-none select-none">
-                <Image src="/tooth.png" alt="" fill sizes="112px" className="object-contain" />
-              </div>
-
-              <div className="relative z-10 p-8 flex flex-col flex-1">
-                {/* Icon + title + tagline */}
-                <div className="flex items-center gap-4 mb-6">
+                key={s.name}
+                className="grid grid-cols-1 lg:grid-cols-2 rounded-2xl overflow-hidden"
+                style={{
+                  background: "white",
+                  border: "1px solid rgba(201,168,76,0.18)",
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+                  minHeight: "220px",
+                }}
+              >
+                {/* Text side */}
+                <div
+                  className={`relative flex flex-col justify-center px-8 py-7 ${flip ? "lg:order-2" : "lg:order-1"}`}
+                >
                   <div
-                    className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                    className="absolute top-0 bottom-0 w-1"
                     style={{
-                      background: cat.accentBg,
-                      border: `1.5px solid ${cat.accent}44`,
+                      background: s.accent,
+                      left: flip ? "auto" : 0,
+                      right: flip ? 0 : "auto",
                     }}
-                  >
-                    <cat.icon size={22} color={cat.accent} strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <h3
-                      className="text-xl font-bold leading-tight"
+                  />
+                  <div className="relative z-10">
+                    <p
+                      className="text-lg font-bold mb-2"
                       style={{ fontFamily: "var(--font-playfair)", color: "var(--brand-dark)" }}
                     >
-                      {cat.title}
-                    </h3>
-                    <p className="text-xs mt-0.5" style={{ color: "var(--grey-mid)" }}>{cat.tagline}</p>
+                      {s.name}
+                    </p>
+                    <p className="text-sm leading-relaxed mb-5" style={{ color: "var(--grey-mid)" }}>
+                      {s.desc}
+                    </p>
+                    <a
+                      href="#contact"
+                      className="self-start inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 hover:scale-105"
+                      style={{ backgroundColor: s.accentBg, color: s.accent, border: `1px solid ${s.accent}33` }}
+                    >
+                      {s.cta}
+                      <ArrowRight size={11} />
+                    </a>
                   </div>
                 </div>
 
-                {/* Divider */}
-                <div className="h-px w-full mb-6" style={{ background: "rgba(201,168,76,0.18)" }} />
-
-                {/* Service rows */}
-                <ul className="space-y-4 flex-1">
-                  {cat.services.map((s) => (
-                    <li key={s.name} className="flex items-start gap-3">
-                      <span
-                        className="mt-0.5 flex-shrink-0 text-xs leading-none select-none"
-                        style={{ color: cat.accent }}
-                      >
-                        ✦
-                      </span>
-                      <div>
-                        <p className="text-sm font-semibold" style={{ color: "var(--brand-dark)" }}>{s.name}</p>
-                        <p className="text-xs leading-relaxed mt-0.5" style={{ color: "var(--grey-mid)" }}>{s.desc}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Card CTA */}
-                <a
-                  href="#contact"
-                  className="mt-8 self-start inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-300 hover:scale-105"
-                  style={{ backgroundColor: cat.accentBg, color: cat.accent, border: `1px solid ${cat.accent}33` }}
+                {/* Image side */}
+                <div
+                  className={`relative min-h-[200px] lg:min-h-0 ${flip ? "lg:order-1" : "lg:order-2"}`}
                 >
-                  {cat.cta}
-                  <ArrowRight size={12} />
-                </a>
+                  <Image
+                    src={s.image}
+                    alt={s.name}
+                    fill
+                    className="object-cover object-center"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                  />
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: flip
+                        ? "linear-gradient(to left, transparent 55%, rgba(255,255,255,0.12) 100%)"
+                        : "linear-gradient(to right, transparent 55%, rgba(255,255,255,0.12) 100%)",
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Bottom CTA */}
