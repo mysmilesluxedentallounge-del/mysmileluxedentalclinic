@@ -13,8 +13,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.error("SMTP_USER or SMTP_PASS env vars are not set.");
+    return NextResponse.json(
+      { error: "Email service is not configured. Please contact the clinic directly." },
+      { status: 500 }
+    );
+  }
+
   const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
@@ -33,7 +43,12 @@ export async function POST(req: NextRequest) {
   const salutation = gender === "female" ? "Ms." : "Mr.";
 
   const logoPath = path.join(process.cwd(), "public", "logo.png");
-  const logoExists = fs.existsSync(logoPath);
+  let logoExists = false;
+  try {
+    logoExists = fs.existsSync(logoPath);
+  } catch {
+    logoExists = false;
+  }
 
   const html = `
 <!DOCTYPE html>
@@ -207,9 +222,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("Mail send error:", err);
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Mail send error:", message);
     return NextResponse.json(
-      { error: "Failed to send email. Please try again." },
+      { error: `Mail error: ${message}` },
       { status: 500 }
     );
   }
