@@ -1,8 +1,12 @@
-import type { Metadata, PageProps } from "next";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Phone } from "lucide-react";
+
+type Props = {
+  params: Promise<{ slug: string }>;
+};
 import { services, getServiceBySlug } from "@/lib/services";
 
 export function generateStaticParams() {
@@ -10,7 +14,7 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata(
-  props: PageProps<"/services/[slug]">
+  props: Props
 ): Promise<Metadata> {
   const { slug } = await props.params;
   const service = getServiceBySlug(slug);
@@ -57,7 +61,7 @@ function whatsappLink(service: string) {
 }
 
 export default async function ServicePage(
-  props: PageProps<"/services/[slug]">
+  props: Props
 ) {
   const { slug } = await props.params;
   const service = getServiceBySlug(slug);
