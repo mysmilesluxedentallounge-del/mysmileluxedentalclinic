@@ -97,6 +97,19 @@ function LinkedInIcon() {
   );
 }
 
+function YouTubeIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="w-7 h-7"
+      aria-hidden="true"
+    >
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+  );
+}
+
 export default function LinksPage() {
   return (
     <main
@@ -256,7 +269,7 @@ export default function LinksPage() {
         {/* ── Social Media ── */}
         <section className="w-full flex flex-col items-center gap-4">
           <SectionLabel>Watch Us On</SectionLabel>
-          <div className="flex items-center gap-4 w-full">
+          <div className="flex items-center gap-3 w-full">
             <a
               href="https://www.instagram.com/mysmileluxedentallounge"
               target="_blank"
@@ -272,6 +285,23 @@ export default function LinksPage() {
               </span>
               <span className="text-xs font-semibold" style={{ color: "#2c2c2c" }}>
                 Instagram
+              </span>
+            </a>
+            <a
+              href="https://www.youtube.com/@Mysmilesluxedentallounge"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex flex-col items-center gap-2 py-4 rounded-2xl transition-all duration-200 hover:scale-[1.04] active:scale-[0.97]"
+              style={{
+                background: "rgba(255,0,0,0.06)",
+                border: "1px solid rgba(255,0,0,0.18)",
+              }}
+            >
+              <span style={{ color: "#ff0000" }}>
+                <YouTubeIcon />
+              </span>
+              <span className="text-xs font-semibold" style={{ color: "#2c2c2c" }}>
+                YouTube
               </span>
             </a>
             <a
