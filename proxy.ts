@@ -10,6 +10,16 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const isDashboard = pathname.startsWith(DASHBOARD_PATH)
   const isLogin = pathname.startsWith(LOGIN_PATH)
+  const hasSupabaseEnv =
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+
+  if (!hasSupabaseEnv) {
+    if (isDashboard) {
+      return NextResponse.redirect(new URL(LOGIN_PATH, request.url))
+    }
+    return NextResponse.next()
+  }
 
   const { supabase, response } = createSupabaseProxyClient(request)
   const {

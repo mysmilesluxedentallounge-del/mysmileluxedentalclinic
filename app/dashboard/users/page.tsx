@@ -1,15 +1,33 @@
+import Link from "next/link"
 import { requireAdmin } from "@/lib/auth"
 import { createStaffUserAction } from "@/lib/dashboard-actions"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
-export default async function UsersPage() {
+type UsersSearchParams = {
+  page?: string
+}
+
+const PAGE_SIZE = 10
+
+export default async function UsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<UsersSearchParams>
+}) {
   await requireAdmin()
+  const { page = "1" } = await searchParams
+  const requestedPage = Math.max(1, Number(page) || 1)
   const supabase = await createSupabaseServerClient()
 
   const { data: users } = await supabase
     .from("profiles")
     .select("id, full_name, role, created_at")
     .order("created_at", { ascending: false })
+  const typedUsers = users ?? []
+  const totalPages = Math.max(1, Math.ceil(typedUsers.length / PAGE_SIZE))
+  const currentPage = Math.min(requestedPage, totalPages)
+  const startIndex = (currentPage - 1) * PAGE_SIZE
+  const paginatedUsers = typedUsers.slice(startIndex, startIndex + PAGE_SIZE)
 
   return (
     <section className="space-y-6">
@@ -47,22 +65,57 @@ export default async function UsersPage() {
         <table className="w-full text-sm">
           <thead className="bg-slate-100 text-left">
             <tr>
+              <th className="px-4 py-2">S.No</th>
               <th className="px-4 py-2">Name</th>
               <th className="px-4 py-2">Role</th>
               <th className="px-4 py-2">Created</th>
+              <th className="px-4 py-2">Action</th>
             </tr>
           </thead>
           <tbody>
-            {users?.map((user) => (
+            {paginatedUsers.map((user, index) => (
               <tr key={user.id} className="border-t">
+                <td className="px-4 py-2">{startIndex + index + 1}</td>
                 <td className="px-4 py-2">{user.full_name || "-"}</td>
                 <td className="px-4 py-2 uppercase">{user.role}</td>
                 <td className="px-4 py-2">{new Date(user.created_at).toLocaleDateString("en-IN")}</td>
+                <td className="px-4 py-2">
+                  <Link href={`/dashboard/users/${user.id}`} className="text-blue-600 hover:underline">
+                    Edit
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {typedUsers.length > 0 ? (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing {startIndex + 1} to {Math.min(startIndex + PAGE_SIZE, typedUsers.length)} of {typedUsers.length}
+          </p>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/dashboard/users?page=${Math.max(1, currentPage - 1)}`}
+              className={`rounded-md border px-3 py-1 text-sm ${currentPage === 1 ? "pointer-events-none opacity-50" : ""}`}
+            >
+              Previous
+            </Link>
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Link
+              href={`/dashboard/users?page=${Math.min(totalPages, currentPage + 1)}`}
+              className={`rounded-md border px-3 py-1 text-sm ${
+                currentPage === totalPages ? "pointer-events-none opacity-50" : ""
+              }`}
+            >
+              Next
+            </Link>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }

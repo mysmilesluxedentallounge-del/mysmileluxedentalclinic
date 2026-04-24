@@ -5,6 +5,16 @@ import Image from "next/image";
 
 const plans = [
   {
+    name: "Premium Dental Health Plan",
+    price: "299",
+    icon: "/svgs/dental-care.png",
+    badge: "Best Value",
+    benefits: [
+      "₹1,800 treatment coupon redeemable against any dental procedure.",
+      "Free Consultation and X-ray.",
+    ],
+  },
+  {
     name: "Super Speciality Dental Health Plan",
     price: "499",
     icon: "/svgs/protection.png",
@@ -13,16 +23,6 @@ const plans = [
       "₹1,800 treatment coupon redeemable against any dental procedure.",
       "₹3,500 off on ortho & implants treatment.",
       "Priority booking with specialist doctors.",
-    ],
-  },
-  {
-    name: "Premium Dental Health Plan",
-    price: "299",
-    icon: "/svgs/dental-care.png",
-    badge: "Best Value",
-    benefits: [
-      "₹1,800 treatment coupon redeemable against any dental procedure.",
-      "Free Consultation and X-ray.",
     ],
   },
 ];

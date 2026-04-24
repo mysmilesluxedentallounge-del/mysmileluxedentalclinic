@@ -2,9 +2,31 @@ import fs from "fs";
 import path from "path";
 import nodemailer from "nodemailer";
 import { NextRequest, NextResponse } from "next/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
+function isDefaultDoctorName(name: string | null | undefined) {
+  if (!name) return false;
+  const normalized = name.toLowerCase().replace(/\./g, "").trim();
+  return normalized.includes("shridha") && normalized.includes("prabhu");
+}
 
 export async function POST(req: NextRequest) {
-  const { name, email, phone, gender, dob, date, message } = await req.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  const { name, email, phone, gender, dob, date, message } = body as {
+    name?: string;
+    email?: string;
+    phone?: string;
+    gender?: string;
+    dob?: string;
+    date?: string;
+    message?: string;
+  };
 
   if (!name || !email || !phone) {
     return NextResponse.json(
@@ -12,24 +34,6 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.error("SMTP_USER or SMTP_PASS env vars are not set.");
-    return NextResponse.json(
-      { error: "Email service is not configured. Please contact the clinic directly." },
-      { status: 500 }
-    );
-  }
-
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
 
   const formattedDate = date
     ? new Date(date).toLocaleDateString("en-IN", {
@@ -41,6 +45,123 @@ export async function POST(req: NextRequest) {
     : "To be confirmed";
 
   const salutation = gender === "female" ? "Ms." : "Mr.";
+
+  let patientId: string | null = null;
+  let bookingError: string | null = null;
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data: doctors, error: doctorError } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .eq("role", "doctor")
+      .order("full_name");
+    if (doctorError || !doctors?.length) {
+      throw new Error("No doctor profile found for appointment booking.");
+    }
+
+    const defaultDoctor = doctors.find((doctor) => isDefaultDoctorName(doctor.full_name)) ?? doctors[0];
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const normalizedPhone = String(phone).trim();
+
+    let existingPatient: { id: string } | null = null;
+    if (normalizedPhone) {
+      const { data } = await supabase
+        .from("patients")
+        .select("id")
+        .eq("phone", normalizedPhone)
+        .maybeSingle();
+      existingPatient = data;
+    }
+
+    if (!existingPatient && normalizedEmail) {
+      const { data } = await supabase
+        .from("patients")
+        .select("id")
+        .eq("email", normalizedEmail)
+        .maybeSingle();
+      existingPatient = data;
+    }
+
+    if (existingPatient) {
+      patientId = existingPatient.id;
+      await supabase
+        .from("patients")
+        .update({
+          full_name: String(name).trim(),
+          phone: normalizedPhone || null,
+          email: normalizedEmail || null,
+          gender: String(gender || "").trim() || null,
+          dob: String(dob || "").trim() || null,
+        })
+        .eq("id", patientId);
+    } else {
+      const { data: createdPatient, error: createPatientError } = await supabase
+        .from("patients")
+        .insert({
+          full_name: String(name).trim(),
+          phone: normalizedPhone || null,
+          email: normalizedEmail || null,
+          gender: String(gender || "").trim() || null,
+          dob: String(dob || "").trim() || null,
+          notes: String(message || "").trim() || null,
+          created_by: defaultDoctor.id,
+        })
+        .select("id")
+        .single();
+
+      if (createPatientError || !createdPatient) {
+        throw new Error(createPatientError?.message || "Could not create patient record.");
+      }
+
+      patientId = createdPatient.id;
+    }
+
+    const appointmentDate = String(date || "").trim() || new Date().toISOString().split("T")[0];
+    const appointmentNotes = String(message || "").trim() || null;
+    const { error: appointmentError } = await supabase.from("appointments").insert({
+      patient_id: patientId,
+      doctor_id: defaultDoctor.id,
+      appointment_date: appointmentDate,
+      appointment_time: "10:00",
+      status: "scheduled",
+      notes: appointmentNotes,
+      treatment: null,
+    });
+
+    if (appointmentError) {
+      throw new Error(appointmentError.message);
+    }
+  } catch (error) {
+    bookingError = error instanceof Error ? error.message : "Could not create patient and appointment.";
+  }
+
+  if (bookingError) {
+    return NextResponse.json(
+      { error: bookingError },
+      { status: 500 }
+    );
+  }
+
+  const hasSmtp = Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
+  if (!hasSmtp) {
+    console.warn("SMTP_USER or SMTP_PASS not set; appointment saved but no confirmation email sent.");
+    return NextResponse.json({
+      success: true,
+      patientId,
+      emailSent: false,
+      message: "Your appointment request was received. Email confirmation is not configured on the server; the clinic will contact you by phone.",
+    });
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
 
   const logoPath = path.join(process.cwd(), "public", "logo.png");
   let logoExists = false;
@@ -220,13 +341,18 @@ export async function POST(req: NextRequest) {
         : [],
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, patientId, emailSent: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("Mail send error:", message);
     return NextResponse.json(
-      { error: `Mail error: ${message}` },
-      { status: 500 }
+      {
+        success: true,
+        patientId,
+        emailSent: false,
+        message: `Your appointment was saved, but the confirmation email could not be sent (${message}). The clinic will still contact you.`,
+      },
+      { status: 200 }
     );
   }
 }

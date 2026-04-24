@@ -6,6 +6,7 @@ export type Profile = {
   id: string
   full_name: string
   role: UserRole
+  doctor_signature: string | null
   created_at: string
 }
 
@@ -14,6 +15,7 @@ export type Patient = {
   full_name: string
   phone: string | null
   email: string | null
+  gender: "male" | "female" | "other" | null
   dob: string | null
   address: string | null
   notes: string | null
@@ -39,8 +41,24 @@ export type Invoice = {
   appointment_id: string | null
   amount: number
   status: InvoiceStatus
-  payment_method: string | null
+  payment_method: "upi" | "cash" | "bank_transfer" | null
+  upi_transaction_id: string | null
+  include_treatment_date: boolean
   invoice_date: string
   notes: string | null
   created_at: string
+}
+
+export type InvoiceItem = {
+  id: string
+  invoice_id: string
+  treatment_name: string
+  treatment_date: string | null
+  cost: number
+  sort_order: number
+  created_at: string
+}
+
+export type InvoiceWithItems = Invoice & {
+  items: InvoiceItem[]
 }

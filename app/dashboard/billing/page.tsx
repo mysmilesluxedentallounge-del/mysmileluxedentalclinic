@@ -1,6 +1,8 @@
+import Link from "next/link"
 import { requireAuth } from "@/lib/auth"
-import { createInvoiceAction } from "@/lib/dashboard-actions"
+import { deleteInvoiceAction } from "@/lib/dashboard-actions"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import DownloadInvoiceButton from "./download-invoice-button"
 
 type InvoiceRow = {
   id: string
@@ -10,6 +12,12 @@ type InvoiceRow = {
   patients: { full_name: string } | null
 }
 
+type BillingSearchParams = {
+  page?: string
+}
+
+const PAGE_SIZE = 10
+
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -17,20 +25,26 @@ function formatCurrency(value: number) {
   }).format(value)
 }
 
-export default async function BillingPage() {
+export default async function BillingPage({
+  searchParams,
+}: {
+  searchParams: Promise<BillingSearchParams>
+}) {
   await requireAuth()
+  const { page = "1" } = await searchParams
+  const requestedPage = Math.max(1, Number(page) || 1)
   const supabase = await createSupabaseServerClient()
 
-  const [{ data: patients }, { data: appointments }, { data: invoices }] = await Promise.all([
-    supabase.from("patients").select("id, full_name").order("full_name"),
-    supabase.from("appointments").select("id, patient_id, appointment_date").order("appointment_date", { ascending: false }),
-    supabase
-      .from("invoices")
-      .select("id, patient_id, amount, status, invoice_date, patients(full_name)")
-      .order("invoice_date", { ascending: false }),
-  ])
+  const { data: invoices } = await supabase
+    .from("invoices")
+    .select("id, patient_id, amount, status, invoice_date, patients(full_name)")
+    .order("invoice_date", { ascending: false })
 
   const typedInvoices = (invoices as InvoiceRow[] | null) ?? []
+  const totalPages = Math.max(1, Math.ceil(typedInvoices.length / PAGE_SIZE))
+  const currentPage = Math.min(requestedPage, totalPages)
+  const startIndex = (currentPage - 1) * PAGE_SIZE
+  const paginatedInvoices = typedInvoices.slice(startIndex, startIndex + PAGE_SIZE)
   const totalBilled = typedInvoices.reduce((sum, item) => sum + Number(item.amount), 0)
   const totalCollected =
     typedInvoices
@@ -40,9 +54,17 @@ export default async function BillingPage() {
 
   return (
     <section className="space-y-6">
-      <header>
-        <h1 className="font-heading text-3xl">Billing</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Track invoices, collections, and outstanding payments.</p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-3xl">Billing</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Track invoices, collections, and outstanding payments.</p>
+        </div>
+        <Link
+          href="/dashboard/billing/new"
+          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+        >
+          Generate Invoice
+        </Link>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -60,62 +82,75 @@ export default async function BillingPage() {
         </article>
       </div>
 
-      <form action={createInvoiceAction} className="rounded-lg border bg-white p-4">
-        <h2 className="text-lg font-semibold">Create invoice</h2>
-        <div className="mt-3 grid gap-3 md:grid-cols-2">
-          <select name="patient_id" required className="rounded-md border px-3 py-2 text-sm">
-            <option value="">Select patient</option>
-            {patients?.map((patient) => (
-              <option key={patient.id} value={patient.id}>
-                {patient.full_name}
-              </option>
-            ))}
-          </select>
-          <select name="appointment_id" className="rounded-md border px-3 py-2 text-sm">
-            <option value="">Link appointment (optional)</option>
-            {appointments?.map((appointment) => (
-              <option key={appointment.id} value={appointment.id}>
-                {appointment.appointment_date} - {appointment.id.slice(0, 8)}
-              </option>
-            ))}
-          </select>
-          <input name="amount" type="number" step="0.01" required placeholder="Amount" className="rounded-md border px-3 py-2 text-sm" />
-          <input name="invoice_date" type="date" required className="rounded-md border px-3 py-2 text-sm" />
-          <select name="status" defaultValue="unpaid" className="rounded-md border px-3 py-2 text-sm">
-            <option value="unpaid">Unpaid</option>
-            <option value="partial">Partial</option>
-            <option value="paid">Paid</option>
-          </select>
-          <input name="payment_method" placeholder="Payment method" className="rounded-md border px-3 py-2 text-sm" />
-          <textarea name="notes" placeholder="Notes" className="rounded-md border px-3 py-2 text-sm md:col-span-2" />
-        </div>
-        <button type="submit" className="mt-3 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white">
-          Save invoice
-        </button>
-      </form>
-
       <div className="overflow-hidden rounded-lg border bg-white">
         <table className="w-full text-sm">
           <thead className="bg-slate-100 text-left">
             <tr>
+              <th className="px-4 py-2">S.No</th>
               <th className="px-4 py-2">Date</th>
               <th className="px-4 py-2">Patient</th>
               <th className="px-4 py-2">Amount</th>
               <th className="px-4 py-2">Status</th>
+              <th className="px-4 py-2">PDF</th>
+              <th className="px-4 py-2">Action</th>
             </tr>
           </thead>
           <tbody>
-            {typedInvoices.map((invoice) => (
+            {paginatedInvoices.map((invoice, index) => (
               <tr key={invoice.id} className="border-t">
+                <td className="px-4 py-2">{startIndex + index + 1}</td>
                 <td className="px-4 py-2">{invoice.invoice_date}</td>
                 <td className="px-4 py-2">{invoice.patients?.full_name || "-"}</td>
                 <td className="px-4 py-2">{formatCurrency(Number(invoice.amount))}</td>
                 <td className="px-4 py-2">{invoice.status}</td>
+                <td className="px-4 py-2">
+                  <DownloadInvoiceButton invoiceId={invoice.id} />
+                </td>
+                <td className="px-4 py-2">
+                  <div className="flex items-center gap-3">
+                    <Link href={`/dashboard/billing/${invoice.id}`} className="text-blue-600 hover:underline">
+                      Edit
+                    </Link>
+                    <form action={deleteInvoiceAction}>
+                      <input type="hidden" name="invoice_id" value={invoice.id} />
+                      <button type="submit" className="text-red-600 hover:underline">
+                        Delete
+                      </button>
+                    </form>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {typedInvoices.length > 0 ? (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing {startIndex + 1} to {Math.min(startIndex + PAGE_SIZE, typedInvoices.length)} of {typedInvoices.length}
+          </p>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/dashboard/billing?page=${Math.max(1, currentPage - 1)}`}
+              className={`rounded-md border px-3 py-1 text-sm ${currentPage === 1 ? "pointer-events-none opacity-50" : ""}`}
+            >
+              Previous
+            </Link>
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Link
+              href={`/dashboard/billing?page=${Math.min(totalPages, currentPage + 1)}`}
+              className={`rounded-md border px-3 py-1 text-sm ${
+                currentPage === totalPages ? "pointer-events-none opacity-50" : ""
+              }`}
+            >
+              Next
+            </Link>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }

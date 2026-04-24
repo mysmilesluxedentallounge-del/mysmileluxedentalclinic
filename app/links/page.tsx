@@ -44,16 +44,16 @@ function whatsappLink(service: string) {
 }
 
 const services = [
-  { name: "Smile Designing",      icon: "/svgs/white-teeth.png"       },
-  { name: "Veneers",              icon: "/svgs/protection.png"         },
+  { name: "Smile Designing",      icon: "/svgs/teeth.png"       },
+  { name: "Veneers",              icon: "/svgs/dental-veneer.png"         },
   { name: "Teeth Whitening",      icon: "/svgs/sensitive.png"          },
-  { name: "Cosmetic Fillings",    icon: "/svgs/bad-teeth.png"          },
+  { name: "Restoration",          icon: "/svgs/tooth-filling.png"       },
+  { name: "Scaling",              icon: "/svgs/scaling.png"            },
   { name: "Dental Implants",      icon: "/svgs/dental-implant.png"     },
-  { name: "Crowns & Bridges",     icon: "/svgs/dental-prosthesis.png"  },
-  { name: "BPS Dentures",         icon: "/svgs/broken-tooth.png"       },
-  { name: "Full Mouth Rehab",     icon: "/svgs/medical-assistance.png" },
-  { name: "Teeth Cleaning",       icon: "/svgs/dental-care.png"        },
-  { name: "Painless Root Canals", icon: "/svgs/infection.png"          },
+  { name: "Crowns & Bridges",     icon: "/svgs/dental-bridge.png"  },
+  { name: "Denture",         icon: "/svgs/denture.png"       },
+  { name: "Teeth Cleaning",       icon: "/svgs/dental-cleaning.png"        },
+  { name: "Painless Root Canals", icon: "/svgs/canals.png"          },
   { name: "Surgical Extractions", icon: "/svgs/tooth-extraction.png"   },
   { name: "Laser Dentistry",      icon: "/svgs/dentalchair.webp"       },
 ];

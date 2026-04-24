@@ -6,20 +6,28 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text not null default '',
   role text not null default 'doctor' check (role in ('admin', 'doctor')),
+  doctor_signature text,
   created_at timestamptz not null default timezone('utc', now())
 );
+
+alter table public.profiles
+add column if not exists doctor_signature text;
 
 create table if not exists public.patients (
   id uuid primary key default gen_random_uuid(),
   full_name text not null,
   phone text,
   email text,
+  gender text check (gender in ('male', 'female', 'other')),
   dob date,
   address text,
   notes text,
   created_by uuid not null references public.profiles(id) on delete restrict,
   created_at timestamptz not null default timezone('utc', now())
 );
+
+alter table public.patients
+add column if not exists gender text check (gender in ('male', 'female', 'other'));
 
 create table if not exists public.appointments (
   id uuid primary key default gen_random_uuid(),
@@ -39,11 +47,31 @@ create table if not exists public.invoices (
   appointment_id uuid references public.appointments(id) on delete set null,
   amount numeric(12,2) not null check (amount >= 0),
   status text not null default 'unpaid' check (status in ('paid', 'unpaid', 'partial')),
-  payment_method text,
+  payment_method text check (payment_method in ('upi', 'cash', 'bank_transfer')),
+  upi_transaction_id text,
   invoice_date date not null default current_date,
   notes text,
   created_at timestamptz not null default timezone('utc', now())
 );
+
+create table if not exists public.invoice_items (
+  id uuid primary key default gen_random_uuid(),
+  invoice_id uuid not null references public.invoices(id) on delete cascade,
+  treatment_name text not null,
+  treatment_date date,
+  cost numeric(12,2) not null check (cost >= 0),
+  sort_order int not null default 0,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
+alter table public.invoice_items
+add column if not exists treatment_date date;
+
+alter table public.invoices
+add column if not exists upi_transaction_id text;
+
+alter table public.invoices
+add column if not exists include_treatment_date boolean not null default true;
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -72,6 +100,7 @@ alter table public.profiles enable row level security;
 alter table public.patients enable row level security;
 alter table public.appointments enable row level security;
 alter table public.invoices enable row level security;
+alter table public.invoice_items enable row level security;
 
 create or replace function public.current_user_role()
 returns text
@@ -113,3 +142,38 @@ create policy "invoices_auth_rw"
 on public.invoices for all
 using (auth.uid() is not null)
 with check (auth.uid() is not null);
+
+drop policy if exists "invoice_items_auth_rw" on public.invoice_items;
+create policy "invoice_items_auth_rw"
+on public.invoice_items for all
+using (auth.uid() is not null)
+with check (auth.uid() is not null);
+
+-- Seed default doctor user so appointment defaults work out of the box.
+-- Change this password after first login.
+insert into auth.users (
+  id,
+  aud,
+  role,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  created_at,
+  updated_at
+)
+select
+  gen_random_uuid(),
+  'authenticated',
+  'authenticated',
+  'dr.shridha@mysmile.com',
+  crypt('Shridha@123', gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}',
+  '{"full_name":"Dr Shridha Prabhu","role":"doctor"}',
+  now(),
+  now()
+where not exists (
+  select 1 from auth.users where email = 'dr.shridha@mysmile.com'
+);
