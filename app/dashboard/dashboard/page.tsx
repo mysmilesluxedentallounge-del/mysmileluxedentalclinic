@@ -181,10 +181,10 @@ export default async function DashboardPage() {
                 appointment_date: string
                 appointment_time: string
                 status: string
-                patients: { full_name: string } | null
+                patients: { full_name: string }[] | null
               }) => (
                 <li key={item.id} className="rounded border p-3">
-                  <p className="font-medium">{item.patients?.full_name || "Patient"}</p>
+                  <p className="font-medium">{item.patients?.[0]?.full_name || "Patient"}</p>
                   <p className="text-muted-foreground">
                     {item.appointment_date} at {item.appointment_time} - {item.status}
                   </p>
