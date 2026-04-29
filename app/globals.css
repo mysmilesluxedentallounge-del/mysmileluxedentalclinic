@@ -170,3 +170,17 @@
 .gallery-track-right:hover {
   animation-play-state: paused;
 }
+
+/* Dashboard shell: consistent pointer on interactive elements */
+.dashboard-app-shell a[href],
+.dashboard-app-shell button:not(:disabled),
+.dashboard-app-shell summary,
+.dashboard-app-shell [role="button"] {
+  cursor: pointer;
+}
+.dashboard-app-shell button:disabled {
+  cursor: not-allowed;
+}
+.dashboard-app-shell select {
+  cursor: pointer;
+}

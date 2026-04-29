@@ -1,5 +1,18 @@
 import Link from "next/link"
+import { ChevronLeft, ChevronRight, FilePlus2, Pencil, Trash2 } from "lucide-react"
 import { requireAuth } from "@/lib/auth"
+import {
+  dashboardDeleteActionClass,
+  dashboardEditActionClass,
+  dashboardPrimaryButtonClass,
+} from "@/lib/dashboard-action-styles"
+import {
+  dashboardTableBodyRowClass,
+  dashboardTableClass,
+  dashboardTableHeadClass,
+  dashboardTableThClass,
+  dashboardTableWrapperClass,
+} from "@/lib/dashboard-table"
 import { deleteInvoiceAction } from "@/lib/dashboard-actions"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import DownloadInvoiceButton from "./download-invoice-button"
@@ -14,6 +27,8 @@ type InvoiceRow = {
 
 type BillingSearchParams = {
   page?: string
+  added?: string
+  updated?: string
 }
 
 const PAGE_SIZE = 10
@@ -31,7 +46,7 @@ export default async function BillingPage({
   searchParams: Promise<BillingSearchParams>
 }) {
   await requireAuth()
-  const { page = "1" } = await searchParams
+  const { page = "1", added, updated } = await searchParams
   const requestedPage = Math.max(1, Number(page) || 1)
   const supabase = await createSupabaseServerClient()
 
@@ -54,15 +69,23 @@ export default async function BillingPage({
 
   return (
     <section className="space-y-6">
+      {added ? (
+        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+          Invoice added successfully.
+        </p>
+      ) : null}
+      {updated ? (
+        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+          Invoice updated successfully.
+        </p>
+      ) : null}
       <header className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-heading text-3xl">Billing</h1>
           <p className="mt-2 text-sm text-muted-foreground">Track invoices, collections, and outstanding payments.</p>
         </div>
-        <Link
-          href="/dashboard/billing/new"
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-        >
+        <Link href="/dashboard/billing/new" className={dashboardPrimaryButtonClass}>
+          <FilePlus2 className="size-4 shrink-0" aria-hidden />
           Generate Invoice
         </Link>
       </header>
@@ -82,22 +105,22 @@ export default async function BillingPage({
         </article>
       </div>
 
-      <div className="overflow-hidden rounded-lg border bg-white">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-100 text-left">
+      <div className={dashboardTableWrapperClass}>
+        <table className={dashboardTableClass}>
+          <thead className={dashboardTableHeadClass}>
             <tr>
-              <th className="px-4 py-2">S.No</th>
-              <th className="px-4 py-2">Date</th>
-              <th className="px-4 py-2">Patient</th>
-              <th className="px-4 py-2">Amount</th>
-              <th className="px-4 py-2">Status</th>
-              <th className="px-4 py-2">PDF</th>
-              <th className="px-4 py-2">Action</th>
+              <th className={dashboardTableThClass}>S.No</th>
+              <th className={dashboardTableThClass}>Date</th>
+              <th className={dashboardTableThClass}>Patient</th>
+              <th className={dashboardTableThClass}>Amount</th>
+              <th className={dashboardTableThClass}>Status</th>
+              <th className={dashboardTableThClass}>PDF</th>
+              <th className={dashboardTableThClass}>Action</th>
             </tr>
           </thead>
           <tbody>
             {paginatedInvoices.map((invoice, index) => (
-              <tr key={invoice.id} className="border-t">
+              <tr key={invoice.id} className={dashboardTableBodyRowClass(index)}>
                 <td className="px-4 py-2">{startIndex + index + 1}</td>
                 <td className="px-4 py-2">{invoice.invoice_date}</td>
                 <td className="px-4 py-2">{invoice.patients?.full_name || "-"}</td>
@@ -107,13 +130,15 @@ export default async function BillingPage({
                   <DownloadInvoiceButton invoiceId={invoice.id} />
                 </td>
                 <td className="px-4 py-2">
-                  <div className="flex items-center gap-3">
-                    <Link href={`/dashboard/billing/${invoice.id}`} className="text-blue-600 hover:underline">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Link href={`/dashboard/billing/${invoice.id}`} className={dashboardEditActionClass}>
+                      <Pencil className="size-3.5 shrink-0" aria-hidden />
                       Edit
                     </Link>
-                    <form action={deleteInvoiceAction}>
+                    <form action={deleteInvoiceAction} className="inline">
                       <input type="hidden" name="invoice_id" value={invoice.id} />
-                      <button type="submit" className="text-red-600 hover:underline">
+                      <button type="submit" className={dashboardDeleteActionClass}>
+                        <Trash2 className="size-3.5 shrink-0" aria-hidden />
                         Delete
                       </button>
                     </form>
@@ -133,8 +158,9 @@ export default async function BillingPage({
           <div className="flex items-center gap-2">
             <Link
               href={`/dashboard/billing?page=${Math.max(1, currentPage - 1)}`}
-              className={`rounded-md border px-3 py-1 text-sm ${currentPage === 1 ? "pointer-events-none opacity-50" : ""}`}
+              className={`inline-flex items-center gap-1 rounded-md border px-3 py-1 text-sm ${currentPage === 1 ? "pointer-events-none opacity-50" : ""}`}
             >
+              <ChevronLeft className="size-3.5 shrink-0" aria-hidden />
               Previous
             </Link>
             <span className="text-sm text-muted-foreground">
@@ -142,11 +168,12 @@ export default async function BillingPage({
             </span>
             <Link
               href={`/dashboard/billing?page=${Math.min(totalPages, currentPage + 1)}`}
-              className={`rounded-md border px-3 py-1 text-sm ${
+              className={`inline-flex items-center gap-1 rounded-md border px-3 py-1 text-sm ${
                 currentPage === totalPages ? "pointer-events-none opacity-50" : ""
               }`}
             >
               Next
+              <ChevronRight className="size-3.5 shrink-0" aria-hidden />
             </Link>
           </div>
         </div>

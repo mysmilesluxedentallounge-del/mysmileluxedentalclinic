@@ -1,16 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import { NextRequest, NextResponse } from "next/server"
+import nodemailer from "nodemailer"
+import {
+  emailDocumentClose,
+  emailDocumentOpen,
+  emailFooterBlock,
+  emailGoldBanner,
+  emailLogoHeader,
+  getEmailLogoAttachment,
+} from "@/lib/email-branding"
 
 export async function POST(req: NextRequest) {
-  const { name, phone } = await req.json();
+  const { name, phone } = await req.json()
 
   if (!name || !phone) {
-    return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
+    return NextResponse.json({ error: "Missing required fields." }, { status: 400 })
   }
 
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.error("SMTP_USER or SMTP_PASS env vars are not set.");
-    return NextResponse.json({ error: "Email service not configured." }, { status: 500 });
+    console.error("SMTP_USER or SMTP_PASS env vars are not set.")
+    return NextResponse.json({ error: "Email service not configured." }, { status: 500 })
   }
 
   const transporter = nodemailer.createTransport({
@@ -21,7 +29,7 @@ export async function POST(req: NextRequest) {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
-  });
+  })
 
   const submittedAt = new Date().toLocaleString("en-IN", {
     timeZone: "Asia/Kolkata",
@@ -32,49 +40,68 @@ export async function POST(req: NextRequest) {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
-  });
+  })
 
-  const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"/><title>Callback Request</title></head>
-<body style="margin:0;padding:0;background:#faf8f3;font-family:'Segoe UI',Arial,sans-serif;">
-  <div style="max-width:480px;margin:32px auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+  const { logoExists, attachments } = getEmailLogoAttachment()
 
-    <div style="background:linear-gradient(135deg,#c9a84c 0%,#e8c96a 100%);padding:28px 32px;text-align:center;">
-      <p style="margin:0 0 4px;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.75);">New Lead</p>
-      <h1 style="margin:0;font-size:22px;color:#fff;font-weight:700;">Callback Request</h1>
-    </div>
+  const main = `
+          <tr>
+            <td style="padding:36px 40px 0;">
+              <p style="margin:0;font-size:14px;color:#555555;line-height:1.8;">
+                A visitor on your website has requested a <strong style="color:#1a1a1a;">free consultation callback</strong>. Please reach out as soon as possible.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 40px 0;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="border:1.5px solid #e8d9b0;border-radius:12px;overflow:hidden;">
+                <tr>
+                  <td style="background:#faf8f3;padding:13px 20px;border-bottom:1.5px solid #e8d9b0;">
+                    <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:0.2em;color:#c9a84c;text-transform:uppercase;">&#9670; Callback details</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:18px 20px;background:#ffffff;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
+                      <tr>
+                        <td style="padding:9px 0;border-bottom:1px solid #f0e8d6;font-size:12px;color:#999;width:38%;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Name</td>
+                        <td style="padding:9px 0;border-bottom:1px solid #f0e8d6;font-size:13px;color:#1a1a1a;font-weight:700;">${name}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:9px 0;border-bottom:1px solid #f0e8d6;font-size:12px;color:#999;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Phone</td>
+                        <td style="padding:9px 0;border-bottom:1px solid #f0e8d6;font-size:13px;color:#1a1a1a;font-weight:700;">${phone}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:9px 0;font-size:12px;color:#999;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Submitted</td>
+                        <td style="padding:9px 0;font-size:13px;color:#1a1a1a;font-weight:700;">${submittedAt}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 40px 0;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#fdf9ed;border:1px solid #e8d9b0;border-left:4px solid #c9a84c;border-radius:6px;">
+                <tr>
+                  <td style="padding:14px 18px;">
+                    <p style="margin:0;font-size:13px;color:#6b5200;line-height:1.7;">
+                      Submitted via the <strong>Free Consultation</strong> request on the website.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`
 
-    <div style="padding:32px;">
-      <p style="margin:0 0 20px;font-size:14px;color:#555;">
-        A visitor on your website has requested a free consultation callback. Please reach out as soon as possible.
-      </p>
-
-      <table style="width:100%;border-collapse:collapse;font-size:14px;">
-        <tr style="border-bottom:1px solid #f0e8d6;">
-          <td style="padding:12px 8px;color:#888;width:120px;">Name</td>
-          <td style="padding:12px 8px;font-weight:600;color:#222;">${name}</td>
-        </tr>
-        <tr style="border-bottom:1px solid #f0e8d6;">
-          <td style="padding:12px 8px;color:#888;">Phone</td>
-          <td style="padding:12px 8px;font-weight:600;color:#222;">${phone}</td>
-        </tr>
-        <tr>
-          <td style="padding:12px 8px;color:#888;">Submitted</td>
-          <td style="padding:12px 8px;font-weight:600;color:#222;">${submittedAt}</td>
-        </tr>
-      </table>
-
-      <div style="margin-top:28px;padding:16px;background:#fdf9ed;border-radius:10px;border:1px solid #f0e8d6;text-align:center;">
-        <p style="margin:0;font-size:12px;color:#aaa;">Submitted via the Free Consultation popup on the website.</p>
-      </div>
-    </div>
-
-  </div>
-</body>
-</html>
-`;
+  const html =
+    emailDocumentOpen("Callback Request — MySmile Lux Dental Lounge") +
+    emailLogoHeader(logoExists) +
+    emailGoldBanner("New callback request") +
+    main +
+    emailFooterBlock("staff") +
+    emailDocumentClose()
 
   try {
     await transporter.sendMail({
@@ -82,12 +109,13 @@ export async function POST(req: NextRequest) {
       to: process.env.SMTP_USER,
       subject: `📞 Callback Request — ${name}`,
       html,
-    });
+      attachments,
+    })
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true })
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("Callback mail error:", message);
-    return NextResponse.json({ error: `Mail error: ${message}` }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err)
+    console.error("Callback mail error:", message)
+    return NextResponse.json({ error: `Mail error: ${message}` }, { status: 500 })
   }
 }

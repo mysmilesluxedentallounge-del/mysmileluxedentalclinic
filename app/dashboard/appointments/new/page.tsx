@@ -1,19 +1,13 @@
 import Link from "next/link"
+import { ArrowLeft, Save } from "lucide-react"
 import { requireAuth } from "@/lib/auth"
 import { createAppointmentAction } from "@/lib/dashboard-actions"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import SubmitButton from "@/app/dashboard/submit-button"
+import { BOOKING_TIME_SLOTS } from "@/lib/appointment-schedule"
+import { dashboardPrimaryButtonClass } from "@/lib/dashboard-action-styles"
 
 const DEFAULT_DOCTOR_NAME = "Dr Shridha Prabhu"
-const TIME_SLOTS = Array.from({ length: 19 }, (_, index) => {
-  const totalMinutes = 9 * 60 + index * 30
-  const hours24 = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-  const value = `${String(hours24).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`
-  const hours12 = hours24 % 12 || 12
-  const period = hours24 >= 12 ? "PM" : "AM"
-  const label = `${hours12}:${String(minutes).padStart(2, "0")} ${period}`
-  return { value, label }
-})
 
 function isDefaultDoctorName(name: string | null | undefined) {
   if (!name) return false
@@ -39,9 +33,10 @@ export default async function NewAppointmentPage() {
       <header className="space-y-2">
         <Link
           href="/dashboard/appointments"
-          className="inline-flex items-center text-sm text-blue-600 hover:underline"
+          className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:underline"
         >
-          &larr; Back to appointments
+          <ArrowLeft className="size-3.5 shrink-0" aria-hidden />
+          Back to appointments
         </Link>
         <h1 className="font-heading text-3xl">Add appointment</h1>
         <p className="text-sm text-muted-foreground">Enter appointment details to schedule a new visit.</p>
@@ -49,14 +44,17 @@ export default async function NewAppointmentPage() {
 
       <form action={createAppointmentAction} className="rounded-lg border bg-white p-4">
         <div className="grid gap-3 md:grid-cols-2">
-          <select name="patient_id" required className="rounded-md border px-3 py-2 text-sm">
-            <option value="">Select patient</option>
-            {patients?.map((patient) => (
-              <option key={patient.id} value={patient.id}>
-                {patient.full_name}
-              </option>
-            ))}
-          </select>
+          <label className="space-y-1">
+            <span className="block text-sm font-medium text-slate-700">Patient</span>
+            <select name="patient_id" required className="w-full rounded-md border px-3 py-2 text-sm">
+              <option value="">Select patient</option>
+              {patients?.map((patient) => (
+                <option key={patient.id} value={patient.id}>
+                  {patient.full_name}
+                </option>
+              ))}
+            </select>
+          </label>
 
           <div className="space-y-1">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Doctor</p>
@@ -69,32 +67,51 @@ export default async function NewAppointmentPage() {
               <input type="hidden" name="doctor_id" value={defaultDoctor.id} />
             ) : (
               <p className="text-xs text-red-600">
-                Default doctor profile not found. Create a doctor in Users page with name containing
-                "Shridha Prabhu".
+                Default doctor profile not found. Create a doctor in Users page with name containing{' '}
+                <span className="whitespace-nowrap">&quot;Shridha Prabhu&quot;.</span>
               </p>
             )}
           </div>
 
-          <input name="appointment_date" type="date" required className="rounded-md border px-3 py-2 text-sm" />
-          <select name="appointment_time" required className="rounded-md border px-3 py-2 text-sm">
-            <option value="">Select time slot</option>
-            {TIME_SLOTS.map((slot) => (
-              <option key={slot.value} value={slot.value}>
-                {slot.label}
-              </option>
-            ))}
-          </select>
-          <input name="treatment" placeholder="Treatment" className="rounded-md border px-3 py-2 text-sm" />
-          <select name="status" defaultValue="scheduled" className="rounded-md border px-3 py-2 text-sm">
-            <option value="scheduled">Scheduled</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <textarea name="notes" placeholder="Notes" className="rounded-md border px-3 py-2 text-sm md:col-span-2" />
+          <label className="space-y-1">
+            <span className="block text-sm font-medium text-slate-700">Appointment date</span>
+            <input name="appointment_date" type="date" required className="w-full rounded-md border px-3 py-2 text-sm" />
+          </label>
+          <label className="space-y-1">
+            <span className="block text-sm font-medium text-slate-700">Appointment time</span>
+            <select name="appointment_time" required className="w-full rounded-md border px-3 py-2 text-sm">
+              <option value="">Select time slot</option>
+              {BOOKING_TIME_SLOTS.map((slot) => (
+                <option key={slot.value} value={slot.value}>
+                  {slot.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-1">
+            <span className="block text-sm font-medium text-slate-700">Treatment</span>
+            <input name="treatment" placeholder="Treatment" className="w-full rounded-md border px-3 py-2 text-sm" />
+          </label>
+          <label className="space-y-1">
+            <span className="block text-sm font-medium text-slate-700">Status</span>
+            <select name="status" defaultValue="scheduled" className="w-full rounded-md border px-3 py-2 text-sm">
+              <option value="scheduled">Scheduled</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </label>
+          <label className="space-y-1 md:col-span-2">
+            <span className="block text-sm font-medium text-slate-700">Notes</span>
+            <textarea name="notes" placeholder="Notes" className="w-full rounded-md border px-3 py-2 text-sm" />
+          </label>
         </div>
-        <button type="submit" className="mt-3 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white">
+        <SubmitButton
+          pendingText="Saving appointment..."
+          className={`${dashboardPrimaryButtonClass} mt-3 disabled:opacity-60`}
+        >
+          <Save className="size-4 shrink-0" aria-hidden />
           Save appointment
-        </button>
+        </SubmitButton>
       </form>
     </section>
   )

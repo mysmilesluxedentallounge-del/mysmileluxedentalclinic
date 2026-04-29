@@ -3,6 +3,9 @@ import { requireAuth } from "@/lib/auth"
 import { createInvoiceAction } from "@/lib/dashboard-actions"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { InvoiceItemsFields } from "@/app/dashboard/billing/invoice-items-fields"
+import SubmitButton from "@/app/dashboard/submit-button"
+import { ArrowLeft, Save } from "lucide-react"
+import { dashboardPrimaryButtonClass } from "@/lib/dashboard-action-styles"
 
 export default async function NewInvoicePage({
   searchParams,
@@ -31,8 +34,9 @@ export default async function NewInvoicePage({
       ) : null}
 
       <header className="space-y-2">
-        <Link href="/dashboard/billing" className="inline-flex items-center text-sm text-blue-600 hover:underline">
-          &larr; Back to billing
+        <Link href="/dashboard/billing" className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:underline">
+          <ArrowLeft className="size-3.5 shrink-0" aria-hidden />
+          Back to billing
         </Link>
         <h1 className="font-heading text-3xl">Generate invoice</h1>
         <p className="text-sm text-muted-foreground">Create a new invoice for treatment and payment tracking.</p>
@@ -40,39 +44,57 @@ export default async function NewInvoicePage({
 
       <form action={createInvoiceAction} className="rounded-lg border bg-white p-4">
         <div className="grid gap-3 md:grid-cols-2">
-          <select name="patient_id" required className="rounded-md border px-3 py-2 text-sm">
-            <option value="">Select patient</option>
-            {patients?.map((patient) => (
-              <option key={patient.id} value={patient.id}>
-                {patient.full_name}
-              </option>
-            ))}
-          </select>
-          <select name="appointment_id" className="rounded-md border px-3 py-2 text-sm">
-            <option value="">Link appointment (optional)</option>
-            {appointments?.map((appointment) => (
-              <option key={appointment.id} value={appointment.id}>
-                {appointment.appointment_date} - {appointment.id.slice(0, 8)}
-              </option>
-            ))}
-          </select>
-          <input name="invoice_date" type="date" required className="rounded-md border px-3 py-2 text-sm" />
-          <select name="status" defaultValue="unpaid" className="rounded-md border px-3 py-2 text-sm">
-            <option value="unpaid">Unpaid</option>
-            <option value="partial">Partial</option>
-            <option value="paid">Paid</option>
-          </select>
-          <select name="payment_method" defaultValue="" className="rounded-md border px-3 py-2 text-sm">
-            <option value="">Select payment method</option>
-            <option value="upi">UPI</option>
-            <option value="cash">Cash</option>
-            <option value="bank_transfer">Bank Transfer</option>
-          </select>
-          <input
-            name="upi_transaction_id"
-            placeholder="UPI Transaction ID (required for UPI)"
-            className="rounded-md border px-3 py-2 text-sm"
-          />
+          <label className="space-y-1">
+            <span className="block text-sm font-medium text-slate-700">Patient</span>
+            <select name="patient_id" required className="w-full rounded-md border px-3 py-2 text-sm">
+              <option value="">Select patient</option>
+              {patients?.map((patient) => (
+                <option key={patient.id} value={patient.id}>
+                  {patient.full_name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-1">
+            <span className="block text-sm font-medium text-slate-700">Appointment (optional)</span>
+            <select name="appointment_id" className="w-full rounded-md border px-3 py-2 text-sm">
+              <option value="">Link appointment (optional)</option>
+              {appointments?.map((appointment) => (
+                <option key={appointment.id} value={appointment.id}>
+                  {appointment.appointment_date} - {appointment.id.slice(0, 8)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-1">
+            <span className="block text-sm font-medium text-slate-700">Invoice date</span>
+            <input name="invoice_date" type="date" required className="w-full rounded-md border px-3 py-2 text-sm" />
+          </label>
+          <label className="space-y-1">
+            <span className="block text-sm font-medium text-slate-700">Status</span>
+            <select name="status" defaultValue="unpaid" className="w-full rounded-md border px-3 py-2 text-sm">
+              <option value="unpaid">Unpaid</option>
+              <option value="partial">Partial</option>
+              <option value="paid">Paid</option>
+            </select>
+          </label>
+          <label className="space-y-1">
+            <span className="block text-sm font-medium text-slate-700">Payment method</span>
+            <select name="payment_method" defaultValue="" className="w-full rounded-md border px-3 py-2 text-sm">
+              <option value="">Select payment method</option>
+              <option value="upi">UPI</option>
+              <option value="cash">Cash</option>
+              <option value="bank_transfer">Bank Transfer</option>
+            </select>
+          </label>
+          <label className="space-y-1">
+            <span className="block text-sm font-medium text-slate-700">UPI transaction ID</span>
+            <input
+              name="upi_transaction_id"
+              placeholder="UPI Transaction ID (required for UPI)"
+              className="w-full rounded-md border px-3 py-2 text-sm"
+            />
+          </label>
           <div className="flex items-center gap-2 md:col-span-2">
             <input
               type="checkbox"
@@ -86,11 +108,18 @@ export default async function NewInvoicePage({
             </label>
           </div>
           <InvoiceItemsFields />
-          <textarea name="notes" placeholder="Notes" className="rounded-md border px-3 py-2 text-sm md:col-span-2" />
+          <label className="space-y-1 md:col-span-2">
+            <span className="block text-sm font-medium text-slate-700">Notes</span>
+            <textarea name="notes" placeholder="Notes" className="w-full rounded-md border px-3 py-2 text-sm" />
+          </label>
         </div>
-        <button type="submit" className="mt-3 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white">
+        <SubmitButton
+          pendingText="Saving invoice..."
+          className={`${dashboardPrimaryButtonClass} mt-3`}
+        >
+          <Save className="size-4 shrink-0" aria-hidden />
           Save invoice
-        </button>
+        </SubmitButton>
       </form>
     </section>
   )

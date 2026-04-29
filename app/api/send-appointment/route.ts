@@ -1,8 +1,15 @@
-import fs from "fs";
-import path from "path";
-import nodemailer from "nodemailer";
-import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import nodemailer from "nodemailer"
+import { NextRequest, NextResponse } from "next/server"
+import {
+  EMAIL_CLINIC,
+  emailDocumentClose,
+  emailDocumentOpen,
+  emailFooterBlock,
+  emailGoldBanner,
+  emailLogoHeader,
+  getEmailLogoAttachment,
+} from "@/lib/email-branding"
+import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
 function isDefaultDoctorName(name: string | null | undefined) {
   if (!name) return false;
@@ -103,7 +110,7 @@ export async function POST(req: NextRequest) {
           email: normalizedEmail || null,
           gender: String(gender || "").trim() || null,
           dob: String(dob || "").trim() || null,
-          notes: String(message || "").trim() || null,
+          patient_notes: String(message || "").trim() || null,
           created_by: defaultDoctor.id,
         })
         .select("id")
@@ -163,42 +170,9 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  const logoPath = path.join(process.cwd(), "public", "logo.png");
-  let logoExists = false;
-  try {
-    logoExists = fs.existsSync(logoPath);
-  } catch {
-    logoExists = false;
-  }
+  const { logoExists, attachments } = getEmailLogoAttachment();
 
-  const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Appointment Confirmation – MySmile Lux Dental Lounge</title>
-</head>
-<body style="margin:0;padding:0;background-color:#faf8f3;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#faf8f3;padding:36px 0;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.10);max-width:600px;width:100%;border:1px solid #e8d9b0;">
-
-          <!-- Header: white bg with logo -->
-          <tr>
-            <td style="background:#ffffff;padding:32px 40px 20px;text-align:center;border-bottom:3px solid #c9a84c;">
-              ${logoExists ? `<img src="cid:logo" alt="MySmile Luxe Dental Lounge" width="200" style="display:block;margin:0 auto 0;max-width:200px;" />` : `<p style="margin:0;font-size:22px;font-weight:800;color:#c9a84c;letter-spacing:-0.3px;">MySmile Lux Dental Lounge</p>`}
-            </td>
-          </tr>
-
-          <!-- Gold banner -->
-          <tr>
-            <td style="background:#c9a84c;padding:14px 40px;text-align:center;">
-              <p style="margin:0;font-size:13px;font-weight:700;letter-spacing:0.2em;color:#ffffff;text-transform:uppercase;">Appointment Request Received</p>
-            </td>
-          </tr>
-
+  const bodyHtml = `
           <!-- Greeting -->
           <tr>
             <td style="padding:36px 40px 0;">
@@ -223,7 +197,7 @@ export async function POST(req: NextRequest) {
                 </tr>
                 <!-- Receipt rows -->
                 <tr>
-                  <td style="padding:18px 20px;">
+                  <td style="padding:18px 20px;background:#ffffff;">
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
                         <td style="padding:9px 0;border-bottom:1px solid #f0e8d6;font-size:12px;color:#999;width:38%;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Patient Name</td>
@@ -271,58 +245,21 @@ export async function POST(req: NextRequest) {
                 <tr>
                   <td style="padding:14px 18px;">
                     <p style="margin:0;font-size:13px;color:#6b5200;line-height:1.7;">
-                      Our team will call <strong>${phone}</strong> to confirm your appointment time. For urgent queries or to reschedule, please call <strong>6304693676</strong>.
+                      Our team will call <strong>${phone}</strong> to confirm your appointment time. For urgent queries or to reschedule, please call <strong>${EMAIL_CLINIC.phone}</strong>.
                     </p>
                   </td>
                 </tr>
               </table>
             </td>
-          </tr>
+          </tr>`;
 
-          <!-- Divider -->
-          <tr>
-            <td style="padding:28px 40px 0;">
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="border-top:1px solid #e8d9b0;font-size:0;">&nbsp;</td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Clinic Info -->
-          <tr>
-            <td style="padding:20px 40px 0;text-align:center;">
-              <p style="margin:0 0 4px;font-size:14px;font-weight:800;color:#1a1a1a;letter-spacing:0.01em;">MySmile Lux Dental Lounge</p>
-              <p style="margin:0 0 3px;font-size:12px;color:#888;">Level 2, SLN Terminus Mall, Gachibowli, Hyderabad 500032</p>
-              <p style="margin:0 0 3px;font-size:12px;color:#888;">
-                <a href="tel:6304693676" style="color:#c9a84c;text-decoration:none;font-weight:600;">6304693676</a>
-                &nbsp;&nbsp;|&nbsp;&nbsp;
-                <a href="mailto:mysmileluxedentallounge@gmail.com" style="color:#c9a84c;text-decoration:none;font-weight:600;">mysmileluxedentallounge@gmail.com</a>
-              </p>
-              <p style="margin:0;font-size:12px;color:#888;">
-                <a href="https://instagram.com/mysmileluxdentallounge" style="color:#c9a84c;text-decoration:none;">@mysmileluxdentallounge</a>
-              </p>
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="padding:24px 40px 32px;text-align:center;">
-              <p style="margin:0;font-size:11px;color:#bbbbbb;line-height:1.7;">
-                This is an automated confirmation. Please do not reply to this email.<br/>
-                &copy; ${new Date().getFullYear()} MySmile Lux Dental Lounge. All rights reserved.
-              </p>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `;
+  const html =
+    emailDocumentOpen("Appointment Confirmation – MySmile Lux Dental Lounge") +
+    emailLogoHeader(logoExists) +
+    emailGoldBanner("Appointment Request Received") +
+    bodyHtml +
+    emailFooterBlock("patient") +
+    emailDocumentClose();
 
   try {
     await transporter.sendMail({
@@ -330,15 +267,7 @@ export async function POST(req: NextRequest) {
       to: email,
       subject: "Appointment Request Confirmed – MySmile Lux Dental Lounge",
       html,
-      attachments: logoExists
-        ? [
-            {
-              filename: "logo.png",
-              path: logoPath,
-              cid: "logo",
-            },
-          ]
-        : [],
+      attachments,
     });
 
     return NextResponse.json({ success: true, patientId, emailSent: true });

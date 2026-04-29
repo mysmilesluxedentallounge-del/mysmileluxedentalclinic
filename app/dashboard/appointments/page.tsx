@@ -1,5 +1,20 @@
 import Link from "next/link"
+import { CalendarPlus, CalendarRange, ChevronLeft, ChevronRight, ListFilter, Pencil, RotateCcw, Save, Trash2 } from "lucide-react"
 import { requireAuth } from "@/lib/auth"
+import {
+  dashboardDeleteActionClass,
+  dashboardEditActionClass,
+  dashboardPrimaryButtonClass,
+  dashboardSecondaryButtonClass,
+} from "@/lib/dashboard-action-styles"
+import {
+  dashboardTableBodyRowClass,
+  dashboardTableClass,
+  dashboardTableEmptyRowClass,
+  dashboardTableHeadClass,
+  dashboardTableThClass,
+  dashboardTableWrapperClass,
+} from "@/lib/dashboard-table"
 import { deleteAppointmentAction, updateAppointmentStatusAction } from "@/lib/dashboard-actions"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
@@ -18,6 +33,7 @@ type AppointmentSearchParams = {
   status?: string
   date?: string
   page?: string
+  added?: string
 }
 
 const PAGE_SIZE = 10
@@ -28,7 +44,7 @@ export default async function AppointmentsPage({
   searchParams: Promise<AppointmentSearchParams>
 }) {
   await requireAuth()
-  const { q = "", status = "", date = "", page = "1" } = await searchParams
+  const { q = "", status = "", date = "", page = "1", added } = await searchParams
   const searchQuery = q.trim()
   const requestedPage = Math.max(1, Number(page) || 1)
   const supabase = await createSupabaseServerClient()
@@ -70,17 +86,29 @@ export default async function AppointmentsPage({
 
   return (
     <section className="space-y-6">
+      {added ? (
+        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+          Appointment added successfully.
+        </p>
+      ) : null}
       <header className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-heading text-3xl">Appointments</h1>
           <p className="mt-2 text-sm text-muted-foreground">Schedule and update appointments.</p>
         </div>
-        <Link
-          href="/dashboard/appointments/new"
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-        >
-          Add Appointment
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/dashboard/scheduler"
+            className={`${dashboardSecondaryButtonClass} border-slate-300 bg-white`}
+          >
+            <CalendarRange className="size-4 shrink-0" aria-hidden />
+            Scheduler
+          </Link>
+          <Link href="/dashboard/appointments/new" className={dashboardPrimaryButtonClass}>
+            <CalendarPlus className="size-4 shrink-0" aria-hidden />
+            Add Appointment
+          </Link>
+        </div>
       </header>
 
       <form className="rounded-lg border bg-white p-4">
@@ -100,32 +128,34 @@ export default async function AppointmentsPage({
           </select>
           <input type="date" name="date" defaultValue={date} className="rounded-md border px-3 py-2 text-sm" />
           <div className="flex gap-2">
-            <button type="submit" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white">
+            <button type="submit" className={dashboardPrimaryButtonClass}>
+              <ListFilter className="size-4 shrink-0" aria-hidden />
               Apply
             </button>
-            <Link href="/dashboard/appointments" className="rounded-md border px-4 py-2 text-sm font-medium">
+            <Link href="/dashboard/appointments" className={`${dashboardSecondaryButtonClass} border-slate-300 bg-white`}>
+              <RotateCcw className="size-4 shrink-0" aria-hidden />
               Reset
             </Link>
           </div>
         </div>
       </form>
 
-      <div className="overflow-hidden rounded-lg border bg-white">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-100 text-left">
+      <div className={dashboardTableWrapperClass}>
+        <table className={dashboardTableClass}>
+          <thead className={dashboardTableHeadClass}>
             <tr>
-              <th className="px-4 py-2">S.No</th>
-              <th className="px-4 py-2">Date & time</th>
-              <th className="px-4 py-2">Patient</th>
-              <th className="px-4 py-2">Doctor</th>
-              <th className="px-4 py-2">Status</th>
-              <th className="px-4 py-2">Update</th>
-              <th className="px-4 py-2">Action</th>
+              <th className={dashboardTableThClass}>S.No</th>
+              <th className={dashboardTableThClass}>Date & time</th>
+              <th className={dashboardTableThClass}>Patient</th>
+              <th className={dashboardTableThClass}>Doctor</th>
+              <th className={dashboardTableThClass}>Status</th>
+              <th className={dashboardTableThClass}>Update</th>
+              <th className={dashboardTableThClass}>Action</th>
             </tr>
           </thead>
           <tbody>
             {paginatedAppointments.map((appointment, index) => (
-              <tr key={appointment.id} className="border-t">
+              <tr key={appointment.id} className={dashboardTableBodyRowClass(index)}>
                 <td className="px-4 py-2">{startIndex + index + 1}</td>
                 <td className="px-4 py-2">
                   {appointment.appointment_date} {appointment.appointment_time}
@@ -145,19 +175,25 @@ export default async function AppointmentsPage({
                       <option value="completed">Completed</option>
                       <option value="cancelled">Cancelled</option>
                     </select>
-                    <button className="rounded bg-slate-900 px-2 py-1 text-xs text-white" type="submit">
+                    <button
+                      className="inline-flex items-center gap-1 rounded bg-slate-900 px-2 py-1 text-xs text-white"
+                      type="submit"
+                    >
+                      <Save className="size-3 shrink-0" aria-hidden />
                       Save
                     </button>
                   </form>
                 </td>
                 <td className="px-4 py-2">
-                  <div className="flex items-center gap-3">
-                    <Link href={`/dashboard/appointments/${appointment.id}`} className="text-blue-600 hover:underline">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Link href={`/dashboard/appointments/${appointment.id}`} className={dashboardEditActionClass}>
+                      <Pencil className="size-3.5 shrink-0" aria-hidden />
                       Edit
                     </Link>
-                    <form action={deleteAppointmentAction}>
+                    <form action={deleteAppointmentAction} className="inline">
                       <input type="hidden" name="appointment_id" value={appointment.id} />
-                      <button type="submit" className="text-red-600 hover:underline">
+                      <button type="submit" className={dashboardDeleteActionClass}>
+                        <Trash2 className="size-3.5 shrink-0" aria-hidden />
                         Delete
                       </button>
                     </form>
@@ -166,8 +202,8 @@ export default async function AppointmentsPage({
               </tr>
             ))}
             {filteredAppointments.length === 0 ? (
-              <tr>
-                <td className="px-4 py-4 text-sm text-muted-foreground" colSpan={8}>
+              <tr className={dashboardTableEmptyRowClass}>
+                <td className="px-4 py-4 text-sm text-muted-foreground" colSpan={7}>
                   No appointments found for current search/filter.
                 </td>
               </tr>
@@ -185,8 +221,9 @@ export default async function AppointmentsPage({
           <div className="flex items-center gap-2">
             <Link
               href={getPageHref(Math.max(1, currentPage - 1))}
-              className={`rounded-md border px-3 py-1 text-sm ${currentPage === 1 ? "pointer-events-none opacity-50" : ""}`}
+              className={`inline-flex items-center gap-1 rounded-md border px-3 py-1 text-sm ${currentPage === 1 ? "pointer-events-none opacity-50" : ""}`}
             >
+              <ChevronLeft className="size-3.5 shrink-0" aria-hidden />
               Previous
             </Link>
             <span className="text-sm text-muted-foreground">
@@ -194,11 +231,12 @@ export default async function AppointmentsPage({
             </span>
             <Link
               href={getPageHref(Math.min(totalPages, currentPage + 1))}
-              className={`rounded-md border px-3 py-1 text-sm ${
+              className={`inline-flex items-center gap-1 rounded-md border px-3 py-1 text-sm ${
                 currentPage === totalPages ? "pointer-events-none opacity-50" : ""
               }`}
             >
               Next
+              <ChevronRight className="size-3.5 shrink-0" aria-hidden />
             </Link>
           </div>
         </div>

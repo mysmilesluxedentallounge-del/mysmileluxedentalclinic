@@ -1,3 +1,5 @@
+import type { MedicalHistoryData } from "./patient-clinical"
+
 export type UserRole = "admin" | "doctor"
 export type AppointmentStatus = "scheduled" | "completed" | "cancelled"
 export type InvoiceStatus = "paid" | "unpaid" | "partial"
@@ -18,7 +20,11 @@ export type Patient = {
   gender: "male" | "female" | "other" | null
   dob: string | null
   address: string | null
-  notes: string | null
+  patient_notes: string | null
+  medical_history: MedicalHistoryData | null
+  dental_visit: string | null
+  medication: string | null
+  allergies: string | null
   created_by: string
   created_at: string
 }
@@ -61,4 +67,23 @@ export type InvoiceItem = {
 
 export type InvoiceWithItems = Invoice & {
   items: InvoiceItem[]
+}
+
+export type ClinicMonthlyBudget = {
+  id: string
+  year: number
+  month: number
+  allocated_amount: number
+  notes: string | null
+  created_at: string
+}
+
+export type ClinicExpense = {
+  id: string
+  expense_date: string
+  amount: number
+  category: string
+  description: string | null
+  created_by: string
+  created_at: string
 }

@@ -3,8 +3,19 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { requireAdmin, requireAuth } from "@/lib/auth"
+import { parseMedicalHistoryFromFormData, PATIENT_NOTES_MAX } from "@/lib/patient-clinical"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+
+function triStateOrNull(raw: string) {
+  const v = raw.trim()
+  return v === "yes" || v === "no" || v === "na" ? v : null
+}
+
+function dentalVisitOrNull(raw: string) {
+  const v = raw.trim()
+  return v === "lt_6m" || v === "gt_6m" || v === "gt_1y" ? v : null
+}
 
 function stripLegacyUpiTxnLine(input: string | null) {
   if (!input) return null
@@ -70,7 +81,14 @@ export async function createPatientAction(formData: FormData) {
   const gender = String(formData.get("gender") ?? "").trim() || null
   const dob = String(formData.get("dob") ?? "").trim() || null
   const address = String(formData.get("address") ?? "").trim() || null
-  const notes = String(formData.get("notes") ?? "").trim() || null
+  const patient_notes =
+    String(formData.get("patient_notes") ?? "")
+      .trim()
+      .slice(0, PATIENT_NOTES_MAX) || null
+  const medical_history = parseMedicalHistoryFromFormData(formData)
+  const dental_visit = dentalVisitOrNull(String(formData.get("dental_visit") ?? ""))
+  const medication = triStateOrNull(String(formData.get("medication") ?? ""))
+  const allergies = triStateOrNull(String(formData.get("allergies") ?? ""))
 
   if (!full_name) return
 
@@ -81,28 +99,49 @@ export async function createPatientAction(formData: FormData) {
     gender,
     dob,
     address,
-    notes,
+    patient_notes,
+    medical_history,
+    dental_visit,
+    medication,
+    allergies,
     created_by: profile.id,
   })
 
   revalidatePath("/dashboard")
   revalidatePath("/dashboard/patients")
+  redirect("/dashboard/patients?added=1")
 }
 
-export async function updatePatientNotesAction(formData: FormData) {
+export async function updatePatientClinicalAction(formData: FormData) {
   await requireAuth()
   const supabase = await createSupabaseServerClient()
 
   const patientId = String(formData.get("patient_id") ?? "")
-  const notes = String(formData.get("notes") ?? "").trim() || null
-
   if (!patientId) return
 
-  await supabase.from("patients").update({ notes }).eq("id", patientId)
+  const patient_notes =
+    String(formData.get("patient_notes") ?? "")
+      .trim()
+      .slice(0, PATIENT_NOTES_MAX) || null
+  const medical_history = parseMedicalHistoryFromFormData(formData)
+  const dental_visit = dentalVisitOrNull(String(formData.get("dental_visit") ?? ""))
+  const medication = triStateOrNull(String(formData.get("medication") ?? ""))
+  const allergies = triStateOrNull(String(formData.get("allergies") ?? ""))
+
+  await supabase
+    .from("patients")
+    .update({
+      medical_history,
+      dental_visit,
+      medication,
+      allergies,
+      patient_notes,
+    })
+    .eq("id", patientId)
 
   revalidatePath("/dashboard/patients")
   revalidatePath(`/dashboard/patients/${patientId}`)
-  redirect(`/dashboard/patients/${patientId}?updated=notes`)
+  redirect(`/dashboard/patients/${patientId}?updated=clinical`)
 }
 
 export async function updatePatientDetailsAction(formData: FormData) {
@@ -182,6 +221,7 @@ export async function createAppointmentAction(formData: FormData) {
   revalidatePath("/dashboard")
   revalidatePath("/dashboard/appointments")
   revalidatePath("/dashboard/patients")
+  redirect("/dashboard/appointments?added=1")
 }
 
 export async function updateAppointmentStatusAction(formData: FormData) {
@@ -327,7 +367,7 @@ export async function createInvoiceAction(formData: FormData) {
   revalidatePath("/dashboard")
   revalidatePath("/dashboard/billing")
   revalidatePath("/dashboard/patients")
-  redirect("/dashboard/billing")
+  redirect("/dashboard/billing?added=1")
 }
 
 export async function updateInvoiceAction(formData: FormData) {
@@ -403,7 +443,7 @@ export async function updateInvoiceAction(formData: FormData) {
   revalidatePath("/dashboard")
   revalidatePath("/dashboard/billing")
   revalidatePath(`/dashboard/billing/${invoiceId}`)
-  redirect(`/dashboard/billing/${invoiceId}?updated=1`)
+  redirect("/dashboard/billing?updated=1")
 }
 
 export async function deleteInvoiceAction(formData: FormData) {

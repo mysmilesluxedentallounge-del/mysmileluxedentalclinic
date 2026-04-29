@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { Plus, Trash2 } from "lucide-react"
 
 type InvoiceItemInput = {
   treatment_name: string
@@ -47,8 +48,9 @@ export function InvoiceItemsFields({ initialItems = [] }: { initialItems?: Invoi
         <button
           type="button"
           onClick={addItem}
-          className="rounded-md border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700"
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700"
         >
+          <Plus className="size-3.5 shrink-0" aria-hidden />
           Add treatment
         </button>
       </div>
@@ -56,38 +58,48 @@ export function InvoiceItemsFields({ initialItems = [] }: { initialItems?: Invoi
       <div className="space-y-2">
         {items.map((item, index) => (
           <div key={`item-row-${index}`} className="grid gap-2 md:grid-cols-[1fr_160px_160px_auto]">
-            <input
-              name="item_treatment_name"
-              value={item.treatment_name}
-              onChange={(event) => updateItem(index, "treatment_name", event.target.value)}
-              placeholder="Treatment name"
-              className="rounded-md border px-3 py-2 text-sm"
-              required
-            />
-            <input
-              name="item_date"
-              type="date"
-              value={item.treatment_date}
-              onChange={(event) => updateItem(index, "treatment_date", event.target.value)}
-              className="rounded-md border px-3 py-2 text-sm"
-            />
-            <input
-              name="item_cost"
-              type="number"
-              min="0"
-              step="0.01"
-              value={item.cost}
-              onChange={(event) => updateItem(index, "cost", event.target.value)}
-              placeholder="Cost"
-              className="rounded-md border px-3 py-2 text-sm"
-              required
-            />
+            <label className="space-y-1">
+              <span className="block text-xs font-medium text-slate-600">Treatment name</span>
+              <input
+                name="item_treatment_name"
+                value={item.treatment_name}
+                onChange={(event) => updateItem(index, "treatment_name", event.target.value)}
+                placeholder="Treatment name"
+                className="w-full rounded-md border px-3 py-2 text-sm"
+                required
+              />
+            </label>
+            <label className="space-y-1">
+              <span className="block text-xs font-medium text-slate-600">Treatment date</span>
+              <input
+                name="item_date"
+                type="date"
+                value={item.treatment_date}
+                onChange={(event) => updateItem(index, "treatment_date", event.target.value)}
+                className="w-full rounded-md border px-3 py-2 text-sm"
+              />
+            </label>
+            <label className="space-y-1">
+              <span className="block text-xs font-medium text-slate-600">Cost</span>
+              <input
+                name="item_cost"
+                type="number"
+                min="0"
+                step="0.01"
+                value={item.cost}
+                onChange={(event) => updateItem(index, "cost", event.target.value)}
+                placeholder="Cost"
+                className="w-full rounded-md border px-3 py-2 text-sm"
+                required
+              />
+            </label>
             <button
               type="button"
               onClick={() => removeItem(index)}
               disabled={items.length <= 1}
-              className="rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
+              <Trash2 className="size-3.5 shrink-0" aria-hidden />
               Remove
             </button>
           </div>
