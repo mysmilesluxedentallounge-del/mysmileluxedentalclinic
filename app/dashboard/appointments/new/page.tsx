@@ -3,6 +3,7 @@ import { ArrowLeft, Save } from "lucide-react"
 import { requireAuth } from "@/lib/auth"
 import { createAppointmentAction } from "@/lib/dashboard-actions"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import ChiefComplaintFields from "@/app/dashboard/appointments/chief-complaint-fields"
 import SubmitButton from "@/app/dashboard/submit-button"
 import { BOOKING_TIME_SLOTS } from "@/lib/appointment-schedule"
 import { dashboardPrimaryButtonClass } from "@/lib/dashboard-action-styles"
@@ -88,10 +89,7 @@ export default async function NewAppointmentPage() {
               ))}
             </select>
           </label>
-          <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Treatment</span>
-            <input name="treatment" placeholder="Treatment" className="w-full rounded-md border px-3 py-2 text-sm" />
-          </label>
+          <ChiefComplaintFields className="md:col-span-2" />
           <label className="space-y-1">
             <span className="block text-sm font-medium text-slate-700">Status</span>
             <select name="status" defaultValue="scheduled" className="w-full rounded-md border px-3 py-2 text-sm">

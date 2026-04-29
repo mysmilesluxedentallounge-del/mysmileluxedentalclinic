@@ -117,7 +117,7 @@ export default async function AppointmentsPage({
             type="text"
             name="q"
             defaultValue={searchQuery}
-            placeholder="Search patient, doctor, treatment"
+            placeholder="Search patient, doctor, chief complaint"
             className="rounded-md border px-3 py-2 text-sm md:col-span-2"
           />
           <select name="status" defaultValue={status} className="rounded-md border px-3 py-2 text-sm">

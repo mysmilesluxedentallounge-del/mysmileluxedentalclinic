@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { chiefComplaintSummary, parseChiefComplaintFormJson } from "@/lib/chief-complaint"
 import { requireAdmin, requireAuth } from "@/lib/auth"
 import { parseMedicalHistoryFromFormData, PATIENT_NOTES_MAX } from "@/lib/patient-clinical"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
@@ -31,6 +32,15 @@ function attachLegacyUpiTxnLine(notes: string | null, paymentMethod: string | nu
   if (paymentMethod !== "upi" || !txnId) return notes
   const base = stripLegacyUpiTxnLine(notes)
   return `${base ? `${base}\n` : ""}UPI_TXN_ID: ${txnId}`
+}
+
+function chiefComplaintPayloadFromForm(formData: FormData) {
+  const raw = String(formData.get("chief_complaint") ?? "").trim()
+  const parsed = parseChiefComplaintFormJson(raw || null)
+  return {
+    chief_complaint: parsed,
+    treatment: parsed ? chiefComplaintSummary(parsed) : null,
+  } as const
 }
 
 type InvoiceFormItem = {
@@ -203,7 +213,7 @@ export async function createAppointmentAction(formData: FormData) {
   const appointment_date = String(formData.get("appointment_date") ?? "")
   const appointment_time = String(formData.get("appointment_time") ?? "")
   const status = String(formData.get("status") ?? "scheduled")
-  const treatment = String(formData.get("treatment") ?? "").trim() || null
+  const { chief_complaint, treatment } = chiefComplaintPayloadFromForm(formData)
   const notes = String(formData.get("notes") ?? "").trim() || null
 
   if (!patient_id || !doctor_id || !appointment_date || !appointment_time) return
@@ -214,6 +224,7 @@ export async function createAppointmentAction(formData: FormData) {
     appointment_date,
     appointment_time,
     status,
+    chief_complaint,
     treatment,
     notes,
   })
@@ -249,7 +260,7 @@ export async function updateAppointmentDetailsAction(formData: FormData) {
   const appointment_date = String(formData.get("appointment_date") ?? "")
   const appointment_time = String(formData.get("appointment_time") ?? "")
   const status = String(formData.get("status") ?? "scheduled")
-  const treatment = String(formData.get("treatment") ?? "").trim() || null
+  const { chief_complaint, treatment } = chiefComplaintPayloadFromForm(formData)
   const notes = String(formData.get("notes") ?? "").trim() || null
 
   if (!appointmentId || !patient_id || !doctor_id || !appointment_date || !appointment_time) return
@@ -262,6 +273,7 @@ export async function updateAppointmentDetailsAction(formData: FormData) {
       appointment_date,
       appointment_time,
       status,
+      chief_complaint,
       treatment,
       notes,
     })

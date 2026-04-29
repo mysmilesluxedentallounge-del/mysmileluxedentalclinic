@@ -1,3 +1,4 @@
+import type { ChiefComplaintData } from "./chief-complaint"
 import type { MedicalHistoryData } from "./patient-clinical"
 
 export type UserRole = "admin" | "doctor"
@@ -37,6 +38,7 @@ export type Appointment = {
   appointment_time: string
   status: AppointmentStatus
   treatment: string | null
+  chief_complaint: ChiefComplaintData | null
   notes: string | null
   created_at: string
 }

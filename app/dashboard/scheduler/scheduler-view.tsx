@@ -241,7 +241,7 @@ export default function SchedulerView({
                               <p className="text-slate-600">Doctor: {appt.profiles.full_name}</p>
                             ) : null}
                             {appt.treatment ? (
-                              <p className="mt-1 text-slate-600">Treatment: {appt.treatment}</p>
+                              <p className="mt-1 text-slate-600">Chief complaint: {appt.treatment}</p>
                             ) : null}
                             <div className="mt-3 flex flex-wrap gap-2">
                               {appt.patients?.id ? (

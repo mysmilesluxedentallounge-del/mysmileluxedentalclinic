@@ -2,8 +2,10 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft, Save, Trash2 } from "lucide-react"
 import { requireAuth } from "@/lib/auth"
+import { chiefComplaintFromRow } from "@/lib/chief-complaint"
 import { deleteAppointmentAction, updateAppointmentDetailsAction } from "@/lib/dashboard-actions"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import ChiefComplaintFields from "@/app/dashboard/appointments/chief-complaint-fields"
 import { BOOKING_TIME_SLOTS } from "@/lib/appointment-schedule"
 import { dashboardDangerOutlineButtonClass, dashboardPrimaryButtonClass } from "@/lib/dashboard-action-styles"
 
@@ -22,7 +24,7 @@ export default async function AppointmentDetailPage({
   const [{ data: appointment }, { data: patients }, { data: doctors }] = await Promise.all([
     supabase
       .from("appointments")
-      .select("id, patient_id, doctor_id, appointment_date, appointment_time, status, treatment, notes")
+      .select("id, patient_id, doctor_id, appointment_date, appointment_time, status, treatment, chief_complaint, notes")
       .eq("id", id)
       .maybeSingle(),
     supabase.from("patients").select("id, full_name").order("full_name"),
@@ -32,6 +34,8 @@ export default async function AppointmentDetailPage({
   if (!appointment) {
     notFound()
   }
+
+  const chiefComplaintInitial = chiefComplaintFromRow(appointment.chief_complaint, appointment.treatment)
 
   return (
     <section className="space-y-6">
@@ -118,15 +122,7 @@ export default async function AppointmentDetailPage({
             </select>
           </label>
 
-          <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Treatment</span>
-            <input
-              name="treatment"
-              defaultValue={appointment.treatment ?? ""}
-              placeholder="Treatment"
-              className="w-full rounded-md border px-3 py-2 text-sm"
-            />
-          </label>
+          <ChiefComplaintFields className="md:col-span-2" initial={chiefComplaintInitial} />
 
           <label className="space-y-1">
             <span className="block text-sm font-medium text-slate-700">Status</span>

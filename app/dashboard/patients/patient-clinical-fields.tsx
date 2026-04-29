@@ -4,7 +4,13 @@ import { PATIENT_NOTES_MAX } from "@/lib/patient-clinical"
 const sectionHeaderClass =
   "flex cursor-pointer list-none items-center gap-2 bg-[var(--yellow-mid)] px-4 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden"
 const sectionBodyClass = "space-y-5 border border-t-0 border-slate-200 bg-white p-4"
-const detailsClass = "overflow-hidden rounded-lg border border-slate-200"
+
+/** Plus when closed, minus when open — driven by native <details open> (no client JS). */
+const detailsClass =
+  "overflow-hidden rounded-lg border border-slate-200 [&:not([open])_summary_.cc-disclosure-minus]:!hidden [&:not([open])_summary_.cc-disclosure-plus]:inline-flex [&[open]_summary_.cc-disclosure-minus]:!inline-flex [&[open]_summary_.cc-disclosure-plus]:!hidden"
+
+const disclosureIconBase =
+  "h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-white/80 text-lg leading-none"
 
 type Option = { value: string; label: string }
 
@@ -98,9 +104,8 @@ export default function PatientClinicalFields({
     <div className="space-y-4">
       <details open className={detailsClass}>
         <summary className={sectionHeaderClass}>
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-white/80 text-lg leading-none">
-            −
-          </span>
+          <span className={`cc-disclosure-plus inline-flex ${disclosureIconBase}`}>+</span>
+          <span className={`cc-disclosure-minus hidden ${disclosureIconBase}`}>−</span>
           Medical history
         </summary>
         <div className={`${sectionBodyClass} grid gap-6 md:grid-cols-2`}>
@@ -185,9 +190,8 @@ export default function PatientClinicalFields({
 
       <details open className={detailsClass}>
         <summary className={sectionHeaderClass}>
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-white/80 text-lg leading-none">
-            −
-          </span>
+          <span className={`cc-disclosure-plus inline-flex ${disclosureIconBase}`}>+</span>
+          <span className={`cc-disclosure-minus hidden ${disclosureIconBase}`}>−</span>
           Dental visit
         </summary>
         <div className={sectionBodyClass}>
@@ -202,9 +206,8 @@ export default function PatientClinicalFields({
 
       <details open className={detailsClass}>
         <summary className={sectionHeaderClass}>
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-white/80 text-lg leading-none">
-            −
-          </span>
+          <span className={`cc-disclosure-plus inline-flex ${disclosureIconBase}`}>+</span>
+          <span className={`cc-disclosure-minus hidden ${disclosureIconBase}`}>−</span>
           Medication
         </summary>
         <div className={sectionBodyClass}>
@@ -214,9 +217,8 @@ export default function PatientClinicalFields({
 
       <details open className={detailsClass}>
         <summary className={sectionHeaderClass}>
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-white/80 text-lg leading-none">
-            −
-          </span>
+          <span className={`cc-disclosure-plus inline-flex ${disclosureIconBase}`}>+</span>
+          <span className={`cc-disclosure-minus hidden ${disclosureIconBase}`}>−</span>
           Allergies
         </summary>
         <div className={sectionBodyClass}>
@@ -231,9 +233,8 @@ export default function PatientClinicalFields({
 
       <details open className={detailsClass}>
         <summary className={sectionHeaderClass}>
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-white/80 text-lg leading-none">
-            −
-          </span>
+          <span className={`cc-disclosure-plus inline-flex ${disclosureIconBase}`}>+</span>
+          <span className={`cc-disclosure-minus hidden ${disclosureIconBase}`}>−</span>
           Patient notes
         </summary>
         <div className={sectionBodyClass}>

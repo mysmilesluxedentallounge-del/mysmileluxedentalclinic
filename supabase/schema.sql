@@ -61,9 +61,13 @@ create table if not exists public.appointments (
   appointment_time time not null,
   status text not null default 'scheduled' check (status in ('scheduled', 'completed', 'cancelled')),
   treatment text,
+  chief_complaint jsonb,
   notes text,
   created_at timestamptz not null default timezone('utc', now())
 );
+
+alter table public.appointments
+add column if not exists chief_complaint jsonb;
 
 create table if not exists public.invoices (
   id uuid primary key default gen_random_uuid(),
