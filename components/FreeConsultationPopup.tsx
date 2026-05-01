@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { X, User, Phone, RefreshCw } from "lucide-react";
 import Image from "next/image";
 
@@ -23,12 +23,49 @@ export default function FreeConsultationPopup() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const schedulePopup = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setVisible(true), 20000);
   };
 
+  /** Landing page Book an Appointment (#contact) — do not interrupt with this modal */
+  const suppressForLandingBookingForm = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setVisible(false);
+  }, []);
+
+  useEffect(() => {
+    const isLandingBookingTarget = (target: EventTarget | null) => {
+      if (!target || !(target instanceof Node)) return false;
+      const section = document.getElementById("contact");
+      const form = section?.querySelector("[data-booking-form]");
+      return form ? form.contains(target) : false;
+    };
+
+    const onInteraction = (event: Event) => {
+      if (isLandingBookingTarget(event.target)) {
+        suppressForLandingBookingForm();
+      }
+    };
+
+    document.addEventListener("pointerdown", onInteraction, true);
+    document.addEventListener("focusin", onInteraction, true);
+    document.addEventListener("input", onInteraction, true);
+
+    return () => {
+      document.removeEventListener("pointerdown", onInteraction, true);
+      document.removeEventListener("focusin", onInteraction, true);
+      document.removeEventListener("input", onInteraction, true);
+    };
+  }, [suppressForLandingBookingForm]);
+
   useEffect(() => {
     schedulePopup();
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, []);
 
   const dismiss = () => {

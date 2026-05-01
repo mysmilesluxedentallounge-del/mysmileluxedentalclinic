@@ -216,9 +216,11 @@ export async function createAppointmentAction(formData: FormData) {
   const { chief_complaint, treatment } = chiefComplaintPayloadFromForm(formData)
   const notes = String(formData.get("notes") ?? "").trim() || null
 
-  if (!patient_id || !doctor_id || !appointment_date || !appointment_time) return
+  if (!patient_id || !doctor_id || !appointment_date || !appointment_time) {
+    redirect("/dashboard/appointments/new?error=missing_required_fields")
+  }
 
-  await supabase.from("appointments").insert({
+  let { error } = await supabase.from("appointments").insert({
     patient_id,
     doctor_id,
     appointment_date,
@@ -228,6 +230,22 @@ export async function createAppointmentAction(formData: FormData) {
     treatment,
     notes,
   })
+  if (error && /chief_complaint/i.test(error.message)) {
+    // Backward compatibility for databases that have not run the chief_complaint migration yet.
+    const fallback = await supabase.from("appointments").insert({
+      patient_id,
+      doctor_id,
+      appointment_date,
+      appointment_time,
+      status,
+      treatment,
+      notes,
+    })
+    error = fallback.error
+  }
+  if (error) {
+    redirect("/dashboard/appointments/new?error=save_failed")
+  }
 
   revalidatePath("/dashboard")
   revalidatePath("/dashboard/appointments")

@@ -1,9 +1,7 @@
 import Link from "next/link"
-import { ChevronLeft, ChevronRight, ListFilter, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Eye, ListFilter, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react"
 import { requireAuth } from "@/lib/auth"
 import {
-  dashboardDeleteActionClass,
-  dashboardEditActionClass,
   dashboardPrimaryButtonClass,
   dashboardSecondaryButtonClass,
 } from "@/lib/dashboard-action-styles"
@@ -134,15 +132,31 @@ export default async function PatientsPage({
                 <td className="px-4 py-2 capitalize">{patient.gender || "-"}</td>
                 <td className="px-4 py-2">
                   <div className="flex flex-wrap items-center gap-3">
-                    <Link href={`/dashboard/patients/${patient.id}`} className={dashboardEditActionClass}>
+                    <Link
+                      href={`/dashboard/patients/${patient.id}/view`}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 text-slate-700 hover:bg-slate-100"
+                      title="View"
+                      aria-label="View patient"
+                    >
+                      <Eye className="size-3.5 shrink-0" aria-hidden />
+                    </Link>
+                    <Link
+                      href={`/dashboard/patients/${patient.id}`}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50"
+                      title="Edit"
+                      aria-label="Edit patient"
+                    >
                       <Pencil className="size-3.5 shrink-0" aria-hidden />
-                      Edit
                     </Link>
                     <form action={deletePatientAction} className="inline">
                       <input type="hidden" name="patient_id" value={patient.id} />
-                      <button type="submit" className={dashboardDeleteActionClass}>
+                      <button
+                        type="submit"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-red-200 text-red-600 hover:bg-red-50"
+                        title="Delete"
+                        aria-label="Delete patient"
+                      >
                         <Trash2 className="size-3.5 shrink-0" aria-hidden />
-                        Delete
                       </button>
                     </form>
                   </div>

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Eye, Mail, Printer, Search } from "lucide-react"
 import {
   type InformationCollateral,
-  googleDrivePreviewUrl,
+  googleDriveFileIdFromUrl,
   INFORMATION_COLLATERALS,
   uniqueCollateralTypes,
 } from "@/lib/information-collaterals"
@@ -22,26 +22,53 @@ function viewDocument(row: InformationCollateral) {
   window.open(row.driveUrl, "_blank", "noopener,noreferrer")
 }
 
-/**
- * Open Google Drive preview in a new tab and trigger print when possible.
- * If the dialog does not open, use the tab’s menu → Print, or open View and print from Drive.
- */
 function printDocument(row: InformationCollateral) {
-  const url = googleDrivePreviewUrl(row.driveUrl)
-  const win = window.open(url, "_blank", "noopener,noreferrer")
-  if (!win) return
-  win.addEventListener(
-    "load",
-    () => {
-      try {
-        win.focus()
-        window.setTimeout(() => win.print(), 500)
-      } catch {
-        /* Cross-origin or viewer may block; user can print from the tab */
-      }
-    },
-    { once: true }
-  )
+  const id = googleDriveFileIdFromUrl(row.driveUrl)
+  if (!id) {
+    window.open(row.driveUrl, "_blank", "noopener,noreferrer")
+    return
+  }
+
+  // Keep opener access here so we can write content and trigger print reliably.
+  const printWindow = window.open("", "_blank")
+  if (!printWindow) {
+    window.open(`https://drive.google.com/file/d/${id}/preview`, "_blank", "noopener,noreferrer")
+    return
+  }
+
+  const previewUrl = `https://drive.google.com/file/d/${id}/preview`
+  const safeTitle = row.documentName.replace(/</g, "&lt;").replace(/>/g, "&gt;")
+
+  printWindow.document.open()
+  printWindow.document.write(`<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Print - ${safeTitle}</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #f8fafc; }
+      .frame-wrap { height: 100%; display: grid; grid-template-rows: 1fr auto; }
+      iframe { border: 0; width: 100%; height: 100%; background: #fff; }
+      .bar { display: flex; gap: 8px; justify-content: center; padding: 10px; font-family: Arial, sans-serif; }
+      .btn { border: 1px solid #d4a017; background: #ffc566; color: #2c2c2c; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 14px; }
+    </style>
+  </head>
+  <body>
+    <div class="frame-wrap">
+      <iframe src="${previewUrl}" title="Print preview"></iframe>
+      <div class="bar">
+        <button class="btn" onclick="window.print()">Print</button>
+      </div>
+    </div>
+    <script>
+      setTimeout(() => {
+        try { window.focus(); window.print(); } catch {}
+      }, 1200);
+    </script>
+  </body>
+</html>`)
+  printWindow.document.close()
 }
 
 function printMany(rows: InformationCollateral[]) {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { CLINIC_SOCIAL } from "@/lib/social-links";
 
 export const metadata: Metadata = {
   title: "MySmile Luxe Dental Lounge | Links",
@@ -268,10 +269,10 @@ export default function LinksPage() {
 
         {/* ── Social Media ── */}
         <section className="w-full flex flex-col items-center gap-4">
-          <SectionLabel>Watch Us On</SectionLabel>
+          <SectionLabel>Follow us</SectionLabel>
           <div className="flex items-center gap-3 w-full">
             <a
-              href="https://www.instagram.com/mysmileluxedentallounge"
+              href={CLINIC_SOCIAL.instagram}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 flex flex-col items-center gap-2 py-4 rounded-2xl transition-all duration-200 hover:scale-[1.04] active:scale-[0.97]"
@@ -288,7 +289,7 @@ export default function LinksPage() {
               </span>
             </a>
             <a
-              href="https://www.youtube.com/@Mysmilesluxedentallounge"
+              href={CLINIC_SOCIAL.youtube}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 flex flex-col items-center gap-2 py-4 rounded-2xl transition-all duration-200 hover:scale-[1.04] active:scale-[0.97]"
@@ -305,7 +306,7 @@ export default function LinksPage() {
               </span>
             </a>
             <a
-              href="https://www.linkedin.com/company/mysmile-luxe-dental-lounge"
+              href={CLINIC_SOCIAL.linkedin}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 flex flex-col items-center gap-2 py-4 rounded-2xl transition-all duration-200 hover:scale-[1.04] active:scale-[0.97]"

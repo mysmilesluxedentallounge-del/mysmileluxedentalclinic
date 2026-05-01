@@ -107,7 +107,7 @@ export default function Contact() {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form data-booking-form onSubmit={handleSubmit} className="space-y-5">
                 <div>
                   <label htmlFor="contact-name" className="block text-sm font-medium text-gray-700 mb-1.5">
                     Full Name *

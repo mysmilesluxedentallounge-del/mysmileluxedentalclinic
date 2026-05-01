@@ -16,8 +16,13 @@ function isDefaultDoctorName(name: string | null | undefined) {
   return normalized.includes("shridha") && normalized.includes("prabhu")
 }
 
-export default async function NewAppointmentPage() {
+export default async function NewAppointmentPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
   await requireAuth()
+  const { error } = await searchParams
   const supabase = await createSupabaseServerClient()
   const [{ data: patients }, { data: doctors }] = await Promise.all([
     supabase.from("patients").select("id, full_name").order("full_name"),
@@ -31,6 +36,13 @@ export default async function NewAppointmentPage() {
 
   return (
     <section className="space-y-6">
+      {error ? (
+        <p className="rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {error === "missing_required_fields"
+            ? "Please fill all required fields."
+            : "Could not save appointment. Please try again."}
+        </p>
+      ) : null}
       <header className="space-y-2">
         <Link
           href="/dashboard/appointments"

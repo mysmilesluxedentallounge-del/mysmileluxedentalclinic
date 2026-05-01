@@ -12,11 +12,14 @@ export function googleDriveFileIdFromUrl(url: string): string | null {
   return match?.[1] ?? null
 }
 
-/** Preview URL — better for print (embedded PDF in page) */
-export function googleDrivePreviewUrl(viewUrl: string): string {
+/**
+ * Browser-view URL for shared Drive files.
+ * Opens file content directly (PDF/image viewer) instead of Drive UI when possible.
+ */
+export function googleDriveBrowserViewUrl(viewUrl: string): string {
   const id = googleDriveFileIdFromUrl(viewUrl)
   if (!id) return viewUrl
-  return `https://drive.google.com/file/d/${id}/preview`
+  return `https://drive.google.com/uc?export=view&id=${id}`
 }
 
 export const INFORMATION_COLLATERALS: InformationCollateral[] = [

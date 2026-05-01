@@ -1,21 +1,22 @@
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 
-const services: { name: string; desc: string; image: string; cta: string; accent: string; accentBg: string }[] = [
-  { name: "Smile Designing",      desc: "Bespoke makeovers tailored to your face and personality.",           image: "https://images.pexels.com/photos/3762453/pexels-photo-3762453.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Transform My Smile",       accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
-  { name: "Veneers",              desc: "Ultra-thin porcelain shells for a flawless, natural finish.",        image: "https://images.pexels.com/photos/6627284/pexels-photo-6627284.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Transform My Smile",       accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
-  { name: "Teeth Whitening",      desc: "In-clinic whitening — brighter smile in under an hour.",             image: "https://images.pexels.com/photos/5622271/pexels-photo-5622271.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Book Whitening Session",   accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
-  { name: "Cosmetic Fillings",    desc: "Tooth-coloured fillings that disappear into your smile.",            image: "https://images.pexels.com/photos/3845759/pexels-photo-3845759.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Book Consultation",        accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
-  { name: "Implants",             desc: "Permanent titanium roots that look and feel completely natural.",    image: "https://images.pexels.com/photos/4687905/pexels-photo-4687905.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Book Free Consultation",   accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
-  { name: "Crowns & Bridges",     desc: "Lifelike restorations that bring damaged teeth back to life.",       image: "https://images.pexels.com/photos/6502345/pexels-photo-6502345.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Book Consultation",        accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
-  { name: "BPS Dentures",         desc: "Custom-fitted dentures with superior comfort and stability.",        image: "https://images.pexels.com/photos/5355826/pexels-photo-5355826.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Book Consultation",        accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
-  { name: "Full Mouth Rehab",     desc: "Comprehensive reconstruction restoring full oral function.",         image: "https://images.pexels.com/photos/7788511/pexels-photo-7788511.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Start Rehabilitation",     accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
-  { name: "Teeth Cleaning",       desc: "Professional scaling and polishing for a fresh, healthy mouth.",    image: "https://images.pexels.com/photos/3845744/pexels-photo-3845744.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Book Cleaning",            accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
-  { name: "Painless Root Canals", desc: "2,000+ cases — single-visit, zero-pain rotary endodontics.",        image: "https://images.pexels.com/photos/7800562/pexels-photo-7800562.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Start Your Smile Journey", accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
-  { name: "Surgical Extractions", desc: "Expert removal with minimal recovery and expert aftercare.",         image: "https://images.pexels.com/photos/4687401/pexels-photo-4687401.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Book Consultation",        accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
-  { name: "Laser Dentistry",      desc: "Precise laser treatments for gums, cavities, and whitening.",       image: "https://images.pexels.com/photos/6629416/pexels-photo-6629416.jpeg?auto=compress&cs=tinysrgb&w=800",  cta: "Explore Laser Dentistry",  accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)"    },
+const services: { slug: string; name: string; desc: string; image: string; accent: string; accentBg: string }[] = [
+  { slug: "smile-designing",      name: "Smile Designing",      desc: "Bespoke makeovers tailored to your face and personality.",           image: "https://images.pexels.com/photos/3762453/pexels-photo-3762453.jpeg?auto=compress&cs=tinysrgb&w=800",  accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)" },
+  { slug: "veneers",              name: "Veneers",              desc: "Ultra-thin porcelain shells for a flawless, natural finish.",        image: "https://images.pexels.com/photos/6627284/pexels-photo-6627284.jpeg?auto=compress&cs=tinysrgb&w=800",  accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)" },
+  { slug: "teeth-whitening",      name: "Teeth Whitening",      desc: "In-clinic whitening — brighter smile in under an hour.",             image: "https://images.pexels.com/photos/5622271/pexels-photo-5622271.jpeg?auto=compress&cs=tinysrgb&w=800",  accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)" },
+  { slug: "cosmetic-fillings",    name: "Cosmetic Fillings",    desc: "Tooth-coloured fillings that disappear into your smile.",            image: "https://images.pexels.com/photos/3845759/pexels-photo-3845759.jpeg?auto=compress&cs=tinysrgb&w=800",  accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)" },
+  { slug: "dental-implants",      name: "Implants",             desc: "Permanent titanium roots that look and feel completely natural.",    image: "https://images.pexels.com/photos/4687905/pexels-photo-4687905.jpeg?auto=compress&cs=tinysrgb&w=800",  accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)" },
+  { slug: "crowns-and-bridges",   name: "Crowns & Bridges",     desc: "Lifelike restorations that bring damaged teeth back to life.",       image: "https://images.pexels.com/photos/6502345/pexels-photo-6502345.jpeg?auto=compress&cs=tinysrgb&w=800",  accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)" },
+  { slug: "bps-dentures",         name: "BPS Dentures",         desc: "Custom-fitted dentures with superior comfort and stability.",        image: "https://images.pexels.com/photos/5355826/pexels-photo-5355826.jpeg?auto=compress&cs=tinysrgb&w=800",  accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)" },
+  { slug: "full-mouth-rehab",     name: "Full Mouth Rehab",     desc: "Comprehensive reconstruction restoring full oral function.",         image: "https://images.pexels.com/photos/7788511/pexels-photo-7788511.jpeg?auto=compress&cs=tinysrgb&w=800",  accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)" },
+  { slug: "teeth-cleaning",       name: "Teeth Cleaning",       desc: "Professional scaling and polishing for a fresh, healthy mouth.",    image: "https://images.pexels.com/photos/3845744/pexels-photo-3845744.jpeg?auto=compress&cs=tinysrgb&w=800",  accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)" },
+  { slug: "painless-root-canals", name: "Painless Root Canals", desc: "2,000+ cases — single-visit, zero-pain rotary endodontics.",        image: "https://images.pexels.com/photos/7800562/pexels-photo-7800562.jpeg?auto=compress&cs=tinysrgb&w=800",  accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)" },
+  { slug: "surgical-extractions", name: "Surgical Extractions", desc: "Expert removal with minimal recovery and expert aftercare.",         image: "https://images.pexels.com/photos/4687401/pexels-photo-4687401.jpeg?auto=compress&cs=tinysrgb&w=800",  accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)" },
+  { slug: "laser-dentistry",      name: "Laser Dentistry",      desc: "Precise laser treatments for gums, cavities, and whitening.",       image: "https://images.pexels.com/photos/6629416/pexels-photo-6629416.jpeg?auto=compress&cs=tinysrgb&w=800",  accent: "#c9a84c", accentBg: "rgba(201,168,76,0.07)" },
 ];
 
 export default function Services() {
@@ -103,14 +104,23 @@ export default function Services() {
                     <p className="text-sm leading-relaxed mb-5" style={{ color: "var(--grey-mid)" }}>
                       {s.desc}
                     </p>
-                    <a
-                      href="#contact"
-                      className="self-start inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 hover:scale-105"
-                      style={{ backgroundColor: s.accentBg, color: s.accent, border: `1px solid ${s.accent}33` }}
-                    >
-                      {s.cta}
-                      <ArrowRight size={11} />
-                    </a>
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <Link
+                        href={`/services/${s.slug}`}
+                        className="self-start inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 hover:scale-105"
+                        style={{ backgroundColor: s.accentBg, color: s.accent, border: `1px solid ${s.accent}33` }}
+                      >
+                        View details
+                        <ArrowRight size={11} />
+                      </Link>
+                      <Link
+                        href="/book"
+                        className="self-start inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 hover:scale-105"
+                        style={{ backgroundColor: "var(--yellow-mid)", color: "var(--brand-dark)", border: "1px solid rgba(201,168,76,0.45)" }}
+                      >
+                        Book appointment
+                      </Link>
+                    </div>
                   </div>
                 </div>
 
