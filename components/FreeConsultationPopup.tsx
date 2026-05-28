@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X, User, Phone, RefreshCw } from "lucide-react";
 import Image from "next/image";
+import { FormLabel } from "@/components/form-label";
 
 function genCaptcha() {
   const a = Math.floor(Math.random() * 9) + 1;
@@ -165,38 +166,53 @@ export default function FreeConsultationPopup() {
               </p>
 
               {/* Name */}
-              <div className="relative mb-3">
+              <div className="mb-3">
+                <FormLabel required className="mb-1.5 block text-xs font-medium text-gray-700">
+                  Name
+                </FormLabel>
+                <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2">
                   <User size={15} color="var(--yellow-mid)" />
                 </span>
                 <input
                   type="text"
                   required
-                  placeholder="Name*"
+                  placeholder="Your name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-300 text-gray-700 placeholder-gray-400"
                 />
+                </div>
               </div>
 
               {/* Phone */}
-              <div className="relative mb-4">
+              <div className="mb-4">
+                <FormLabel required className="mb-1.5 block text-xs font-medium text-gray-700">
+                  Phone
+                </FormLabel>
+                <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2">
                   <Phone size={15} color="var(--yellow-mid)" />
                 </span>
                 <input
                   type="tel"
                   required
-                  placeholder="Phone*"
+                  placeholder="Mobile number"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-300 text-gray-700 placeholder-gray-400"
                 />
+                </div>
               </div>
 
               {/* Math Captcha */}
               <div className="mb-4">
-                <p className="text-xs text-gray-500 mb-2">Solve to verify: <strong className="text-gray-800">{captcha.a} + {captcha.b} = ?</strong></p>
+                <p className="text-xs text-gray-500 mb-2">
+                  <FormLabel required as="span" className="inline text-xs text-gray-500">
+                    Solve to verify
+                  </FormLabel>
+                  : <strong className="text-gray-800">{captcha.a} + {captcha.b} = ?</strong>
+                </p>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"

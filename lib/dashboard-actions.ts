@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { sendAppointmentConfirmationEmail } from "@/lib/appointment-confirmation-email"
 import { chiefComplaintSummary, parseChiefComplaintFormJson } from "@/lib/chief-complaint"
 import { requireAdmin, requireAuth } from "@/lib/auth"
 import { parseMedicalHistoryFromFormData, PATIENT_NOTES_MAX } from "@/lib/patient-clinical"
@@ -47,33 +48,72 @@ type InvoiceFormItem = {
   treatment_name: string
   treatment_date: string | null
   cost: number
+  offer_amount: number | null
   sort_order: number
+}
+
+function invoiceLineAmount(item: Pick<InvoiceFormItem, "cost" | "offer_amount">) {
+  return item.offer_amount !== null ? item.offer_amount : item.cost
+}
+
+function isMissingOfferAmountColumnError(message: string | undefined) {
+  return Boolean(message?.includes("offer_amount"))
+}
+
+async function insertInvoiceItems(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  items: InvoiceFormItem[],
+  invoiceId: string
+) {
+  const itemPayload = items.map((item) => ({ ...item, invoice_id: invoiceId }))
+  const { error } = await supabase.from("invoice_items").insert(itemPayload)
+  if (!isMissingOfferAmountColumnError(error?.message)) {
+    return error
+  }
+
+  const fallbackPayload = items.map(({ offer_amount: _offer, ...item }) => ({
+    ...item,
+    invoice_id: invoiceId,
+  }))
+  const { error: fallbackError } = await supabase.from("invoice_items").insert(fallbackPayload)
+  return fallbackError
 }
 
 function parseInvoiceItemsFromFormData(formData: FormData) {
   const names = formData.getAll("item_treatment_name").map((value) => String(value ?? "").trim())
   const costs = formData.getAll("item_cost").map((value) => String(value ?? "").trim())
+  const offers = formData.getAll("item_offer_amount").map((value) => String(value ?? "").trim())
   const dates = formData.getAll("item_date").map((value) => String(value ?? "").trim() || null)
 
   const items: InvoiceFormItem[] = []
 
-  for (let index = 0; index < Math.max(names.length, costs.length); index += 1) {
+  for (let index = 0; index < Math.max(names.length, costs.length, offers.length); index += 1) {
     const treatment_name = names[index] ?? ""
     const costRaw = costs[index] ?? ""
+    const offerRaw = offers[index] ?? ""
 
-    if (!treatment_name && !costRaw) {
+    if (!treatment_name && !costRaw && !offerRaw) {
       continue
     }
 
     const cost = Number(costRaw)
-    if (!treatment_name || Number.isNaN(cost) || cost <= 0) {
+    if (!treatment_name || costRaw === "" || Number.isNaN(cost) || cost < 0) {
       return { items: [], hasInvalidItems: true }
+    }
+
+    let offer_amount: number | null = null
+    if (offerRaw !== "") {
+      offer_amount = Number(offerRaw)
+      if (Number.isNaN(offer_amount) || offer_amount < 0) {
+        return { items: [], hasInvalidItems: true }
+      }
     }
 
     items.push({
       treatment_name,
       treatment_date: dates[index] ?? null,
       cost,
+      offer_amount,
       sort_order: items.length,
     })
   }
@@ -247,6 +287,29 @@ export async function createAppointmentAction(formData: FormData) {
     redirect("/dashboard/appointments/new?error=save_failed")
   }
 
+  const [{ data: patient }, { data: doctor }] = await Promise.all([
+    supabase.from("patients").select("full_name, email, phone").eq("id", patient_id).maybeSingle(),
+    supabase.from("profiles").select("full_name").eq("id", doctor_id).maybeSingle(),
+  ])
+
+  if (patient?.full_name) {
+    try {
+      await sendAppointmentConfirmationEmail({
+        patientName: patient.full_name,
+        patientEmail: patient.email,
+        patientPhone: patient.phone,
+        doctorName: doctor?.full_name ?? null,
+        appointmentDate: appointment_date,
+        appointmentTime: appointment_time,
+        treatment,
+        notes,
+      })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      console.error("Appointment confirmation email error:", message)
+    }
+  }
+
   revalidatePath("/dashboard")
   revalidatePath("/dashboard/appointments")
   revalidatePath("/dashboard/patients")
@@ -339,9 +402,9 @@ export async function createInvoiceAction(formData: FormData) {
   const notes = stripLegacyUpiTxnLine(String(formData.get("notes") ?? "").trim() || null)
   const include_treatment_date = formData.get("include_treatment_date") === "on"
   const { items, hasInvalidItems } = parseInvoiceItemsFromFormData(formData)
-  const amount = items.reduce((sum, item) => sum + item.cost, 0)
+  const amount = items.reduce((sum, item) => sum + invoiceLineAmount(item), 0)
 
-  if (!patient_id || !invoice_date || hasInvalidItems || items.length === 0 || Number.isNaN(amount) || amount <= 0) {
+  if (!patient_id || !invoice_date || hasInvalidItems || items.length === 0 || Number.isNaN(amount) || amount < 0) {
     redirect("/dashboard/billing/new?error=invalid_input")
   }
   if (payment_method === "upi" && !upi_transaction_id) {
@@ -387,8 +450,7 @@ export async function createInvoiceAction(formData: FormData) {
     redirect("/dashboard/billing/new?error=invoice_create_failed")
   }
 
-  const itemPayload = items.map((item) => ({ ...item, invoice_id: invoiceId }))
-  const { error: itemError } = await supabase.from("invoice_items").insert(itemPayload)
+  const itemError = await insertInvoiceItems(supabase, items, invoiceId)
   if (itemError) {
     await supabase.from("invoices").delete().eq("id", invoiceId)
     redirect(`/dashboard/billing/new?error=${encodeURIComponent(itemError.message)}`)
@@ -418,9 +480,9 @@ export async function updateInvoiceAction(formData: FormData) {
   const notes = stripLegacyUpiTxnLine(String(formData.get("notes") ?? "").trim() || null)
   const include_treatment_date = formData.get("include_treatment_date") === "on"
   const { items, hasInvalidItems } = parseInvoiceItemsFromFormData(formData)
-  const amount = items.reduce((sum, item) => sum + item.cost, 0)
+  const amount = items.reduce((sum, item) => sum + invoiceLineAmount(item), 0)
 
-  if (!invoiceId || !patient_id || !invoice_date || hasInvalidItems || items.length === 0 || Number.isNaN(amount)) {
+  if (!invoiceId || !patient_id || !invoice_date || hasInvalidItems || items.length === 0 || Number.isNaN(amount) || amount < 0) {
     redirect(`/dashboard/billing/${invoiceId}?error=invalid_input`)
   }
   if (payment_method === "upi" && !upi_transaction_id) return
@@ -464,8 +526,7 @@ export async function updateInvoiceAction(formData: FormData) {
   if (deleteItemsError) {
     redirect(`/dashboard/billing/${invoiceId}?error=${encodeURIComponent(deleteItemsError.message)}`)
   }
-  const itemPayload = items.map((item) => ({ ...item, invoice_id: invoiceId }))
-  const { error: itemError } = await supabase.from("invoice_items").insert(itemPayload)
+  const itemError = await insertInvoiceItems(supabase, items, invoiceId)
   if (itemError) {
     redirect(`/dashboard/billing/${invoiceId}?error=${encodeURIComponent(itemError.message)}`)
   }

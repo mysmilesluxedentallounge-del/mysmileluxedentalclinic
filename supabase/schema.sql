@@ -88,12 +88,16 @@ create table if not exists public.invoice_items (
   treatment_name text not null,
   treatment_date date,
   cost numeric(12,2) not null check (cost >= 0),
+  offer_amount numeric(12,2) check (offer_amount is null or offer_amount >= 0),
   sort_order int not null default 0,
   created_at timestamptz not null default timezone('utc', now())
 );
 
 alter table public.invoice_items
 add column if not exists treatment_date date;
+
+alter table public.invoice_items
+add column if not exists offer_amount numeric(12,2) check (offer_amount is null or offer_amount >= 0);
 
 alter table public.invoices
 add column if not exists upi_transaction_id text;

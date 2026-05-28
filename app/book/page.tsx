@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Phone, Mail, MapPin, Send } from "lucide-react";
+import { CalendarDays, Phone, Mail, MapPin, Send } from "lucide-react";
+import Calendar from "@/components/ui/calendar";
+import { FormLabel } from "@/components/form-label";
 
 const contactInfo = [
   {
@@ -51,6 +53,8 @@ export default function BookPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [dobCalendarOpen, setDobCalendarOpen] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -81,6 +85,24 @@ export default function BookPage() {
       setLoading(false);
     }
   };
+
+  const selectedPreferredDate = form.date ? new Date(`${form.date}T00:00:00`) : undefined;
+  const preferredDateLabel = selectedPreferredDate
+    ? selectedPreferredDate.toLocaleDateString("en-IN", {
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "Select a date";
+  const selectedDobDate = form.dob ? new Date(`${form.dob}T00:00:00`) : undefined;
+  const dobLabel = selectedDobDate
+    ? selectedDobDate.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "Select date of birth";
 
   return (
     <main
@@ -187,9 +209,14 @@ export default function BookPage() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Full Name */}
                 <div>
-                  <label htmlFor="book-name" className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Full Name *
-                  </label>
+                  <FormLabel
+                    htmlFor="book-name"
+                    required
+                    as="label"
+                    className="block text-sm font-medium text-gray-700 mb-1.5"
+                  >
+                    Full Name
+                  </FormLabel>
                   <input
                     id="book-name"
                     type="text"
@@ -209,15 +236,40 @@ export default function BookPage() {
                     <label htmlFor="book-dob" className="block text-sm font-medium text-gray-700 mb-1.5">
                       Date of Birth
                     </label>
-                    <input
-                      id="book-dob"
-                      type="date"
-                      name="dob"
-                      value={form.dob}
-                      onChange={handleChange}
-                      max={new Date().toISOString().split("T")[0]}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all text-gray-700"
-                    />
+                    <input type="hidden" name="dob" value={form.dob} />
+                    <div className="relative">
+                      <button
+                        id="book-dob"
+                        type="button"
+                        onClick={() => setDobCalendarOpen((prev) => !prev)}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm transition-all text-left flex items-center justify-between hover:border-gray-300"
+                      >
+                        <span className={form.dob ? "text-gray-800" : "text-gray-500"}>{dobLabel}</span>
+                        <CalendarDays size={16} className="text-gray-500" />
+                      </button>
+                      {dobCalendarOpen ? (
+                        <div className="absolute z-20 mt-2 rounded-xl border border-gray-200 bg-white shadow-xl">
+                          <Calendar
+                            mode="single"
+                            selected={selectedDobDate}
+                            onSelect={(date) => {
+                              if (!date) return;
+                              const iso = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+                                .toISOString()
+                                .slice(0, 10);
+                              setForm((prev) => ({ ...prev, dob: iso }));
+                              setDobCalendarOpen(false);
+                            }}
+                            disabled={{ after: new Date() }}
+                            captionLayout="dropdown"
+                            hideNavigation
+                            fromYear={1940}
+                            toYear={new Date().getFullYear()}
+                            initialFocus
+                          />
+                        </div>
+                      ) : null}
+                    </div>
                     {age !== null && (
                       <p
                         className="mt-1.5 text-xs font-medium"
@@ -228,9 +280,14 @@ export default function BookPage() {
                     )}
                   </div>
                   <div>
-                    <label htmlFor="book-gender" className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Gender *
-                    </label>
+                    <FormLabel
+                      htmlFor="book-gender"
+                      required
+                      as="label"
+                      className="block text-sm font-medium text-gray-700 mb-1.5"
+                    >
+                      Gender
+                    </FormLabel>
                     <select
                       id="book-gender"
                       name="gender"
@@ -244,15 +301,21 @@ export default function BookPage() {
                       </option>
                       <option value="male">Male</option>
                       <option value="female">Female</option>
+                      <option value="other">Other</option>
                     </select>
                   </div>
                 </div>
 
                 {/* Phone */}
                 <div>
-                  <label htmlFor="book-phone" className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Phone Number *
-                  </label>
+                  <FormLabel
+                    htmlFor="book-phone"
+                    required
+                    as="label"
+                    className="block text-sm font-medium text-gray-700 mb-1.5"
+                  >
+                    Phone Number
+                  </FormLabel>
                   <input
                     id="book-phone"
                     type="tel"
@@ -267,9 +330,14 @@ export default function BookPage() {
 
                 {/* Email */}
                 <div>
-                  <label htmlFor="book-email" className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Email Address *
-                  </label>
+                  <FormLabel
+                    htmlFor="book-email"
+                    required
+                    as="label"
+                    className="block text-sm font-medium text-gray-700 mb-1.5"
+                  >
+                    Email Address
+                  </FormLabel>
                   <input
                     id="book-email"
                     type="email"
@@ -287,14 +355,36 @@ export default function BookPage() {
                   <label htmlFor="book-date" className="block text-sm font-medium text-gray-700 mb-1.5">
                     Preferred Date
                   </label>
-                  <input
-                    id="book-date"
-                    type="date"
-                    name="date"
-                    value={form.date}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 transition-all text-gray-500"
-                  />
+                  <input type="hidden" name="date" value={form.date} />
+                  <div className="relative">
+                    <button
+                      id="book-date"
+                      type="button"
+                      onClick={() => setCalendarOpen((prev) => !prev)}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm transition-all text-left flex items-center justify-between hover:border-gray-300"
+                    >
+                      <span className={form.date ? "text-gray-800" : "text-gray-500"}>{preferredDateLabel}</span>
+                      <CalendarDays size={16} className="text-gray-500" />
+                    </button>
+                    {calendarOpen ? (
+                      <div className="absolute z-20 mt-2 rounded-xl border border-gray-200 bg-white shadow-xl">
+                        <Calendar
+                          mode="single"
+                          selected={selectedPreferredDate}
+                          onSelect={(date) => {
+                            if (!date) return;
+                            const iso = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+                              .toISOString()
+                              .slice(0, 10);
+                            setForm((prev) => ({ ...prev, date: iso }));
+                            setCalendarOpen(false);
+                          }}
+                          disabled={{ before: new Date() }}
+                          initialFocus
+                        />
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
 
                 {/* Message */}

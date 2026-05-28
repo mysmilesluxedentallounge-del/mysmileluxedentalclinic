@@ -8,6 +8,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 import ChiefComplaintFields from "@/app/dashboard/appointments/chief-complaint-fields"
 import { BOOKING_TIME_SLOTS } from "@/lib/appointment-schedule"
 import { dashboardDangerOutlineButtonClass, dashboardPrimaryButtonClass } from "@/lib/dashboard-action-styles"
+import { FormLabel } from "@/components/form-label"
 
 export default async function AppointmentDetailPage({
   params,
@@ -61,7 +62,9 @@ export default async function AppointmentDetailPage({
         <input type="hidden" name="appointment_id" value={appointment.id} />
         <div className="grid gap-3 md:grid-cols-2">
           <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Patient</span>
+            <FormLabel required className="block text-sm font-medium text-slate-700">
+              Patient
+            </FormLabel>
             <select
               name="patient_id"
               required
@@ -78,7 +81,9 @@ export default async function AppointmentDetailPage({
           </label>
 
           <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Doctor</span>
+            <FormLabel required className="block text-sm font-medium text-slate-700">
+              Doctor
+            </FormLabel>
             <select
               name="doctor_id"
               required
@@ -95,7 +100,9 @@ export default async function AppointmentDetailPage({
           </label>
 
           <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Appointment date</span>
+            <FormLabel required className="block text-sm font-medium text-slate-700">
+              Appointment date
+            </FormLabel>
             <input
               name="appointment_date"
               type="date"
@@ -106,7 +113,9 @@ export default async function AppointmentDetailPage({
           </label>
 
           <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Appointment time</span>
+            <FormLabel required className="block text-sm font-medium text-slate-700">
+              Appointment time
+            </FormLabel>
             <select
               name="appointment_time"
               required

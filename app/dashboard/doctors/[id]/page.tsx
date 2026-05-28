@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth"
 import { updateDoctorAction } from "@/lib/dashboard-actions"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { dashboardPrimaryButtonClass } from "@/lib/dashboard-action-styles"
+import { FormLabel } from "@/components/form-label"
 
 export default async function EditDoctorPage({
   params,
@@ -49,7 +50,9 @@ export default async function EditDoctorPage({
         <input type="hidden" name="doctor_id" value={doctor.id} />
         <div className="grid gap-3 md:grid-cols-2">
           <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Doctor name</span>
+            <FormLabel required className="block text-sm font-medium text-slate-700">
+              Doctor name
+            </FormLabel>
             <input
               name="full_name"
               required

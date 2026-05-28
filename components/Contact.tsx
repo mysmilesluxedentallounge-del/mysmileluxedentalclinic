@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Phone, Mail, MapPin, Send } from "lucide-react";
+import { FormLabel } from "@/components/form-label";
 
 export default function Contact() {
   const [form, setForm] = useState({
@@ -109,9 +110,14 @@ export default function Contact() {
             ) : (
               <form data-booking-form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="contact-name" className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Full Name *
-                  </label>
+                  <FormLabel
+                    htmlFor="contact-name"
+                    required
+                    as="label"
+                    className="block text-sm font-medium text-gray-700 mb-1.5"
+                  >
+                    Full Name
+                  </FormLabel>
                   <input
                     id="contact-name"
                     type="text"
@@ -150,9 +156,14 @@ export default function Contact() {
                     )}
                   </div>
                   <div>
-                    <label htmlFor="contact-gender" className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Gender *
-                    </label>
+                    <FormLabel
+                      htmlFor="contact-gender"
+                      required
+                      as="label"
+                      className="block text-sm font-medium text-gray-700 mb-1.5"
+                    >
+                      Gender
+                    </FormLabel>
                     <select
                       id="contact-gender"
                       name="gender"
@@ -164,14 +175,20 @@ export default function Contact() {
                       <option value="" disabled>Select gender</option>
                       <option value="male">Male</option>
                       <option value="female">Female</option>
+                      <option value="other">Other</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="contact-phone" className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Phone Number *
-                  </label>
+                  <FormLabel
+                    htmlFor="contact-phone"
+                    required
+                    as="label"
+                    className="block text-sm font-medium text-gray-700 mb-1.5"
+                  >
+                    Phone Number
+                  </FormLabel>
                   <input
                     id="contact-phone"
                     type="tel"
@@ -185,9 +202,14 @@ export default function Contact() {
                 </div>
 
                 <div>
-                  <label htmlFor="contact-email" className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Email Address *
-                  </label>
+                  <FormLabel
+                    htmlFor="contact-email"
+                    required
+                    as="label"
+                    className="block text-sm font-medium text-gray-700 mb-1.5"
+                  >
+                    Email Address
+                  </FormLabel>
                   <input
                     id="contact-email"
                     type="email"

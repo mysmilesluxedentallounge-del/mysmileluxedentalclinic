@@ -4,6 +4,7 @@ import { useEffect, useId, useState } from "react"
 import { Mail, Plus, X } from "lucide-react"
 import Link from "next/link"
 import type { InformationCollateral } from "@/lib/information-collaterals"
+import { FormLabel } from "@/components/form-label"
 
 const MAX_MESSAGE = 768
 const MAX_PATIENT = 200
@@ -118,7 +119,9 @@ export default function SendCollateralEmailModal({
         <form onSubmit={handleSubmit} className="space-y-4 px-5 py-4">
           <label className="block text-sm">
             <span className="flex items-center justify-between gap-2">
-              <span className="font-medium text-slate-700">Patient name</span>
+              <FormLabel required className="font-medium text-slate-700">
+                Patient name
+              </FormLabel>
               <Link
                 href="/dashboard/patients"
                 target="_blank"
@@ -142,7 +145,9 @@ export default function SendCollateralEmailModal({
           </label>
 
           <label className="block text-sm">
-            <span className="font-medium text-slate-700">Recipient email</span>
+            <FormLabel required className="font-medium text-slate-700">
+              Recipient email
+            </FormLabel>
             <input
               required
               type="email"

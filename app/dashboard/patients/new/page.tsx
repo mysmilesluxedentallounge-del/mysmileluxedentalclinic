@@ -5,6 +5,7 @@ import { createPatientAction } from "@/lib/dashboard-actions"
 import SubmitButton from "@/app/dashboard/submit-button"
 import { dashboardPrimaryButtonClass } from "@/lib/dashboard-action-styles"
 import PatientClinicalFields from "@/app/dashboard/patients/patient-clinical-fields"
+import { FormLabel } from "@/components/form-label"
 
 export default async function NewPatientPage() {
   await requireAuth()
@@ -23,7 +24,9 @@ export default async function NewPatientPage() {
       <form action={createPatientAction} className="rounded-lg border bg-white p-4">
         <div className="grid gap-3 md:grid-cols-2">
           <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Full name</span>
+            <FormLabel required className="block text-sm font-medium text-slate-700">
+              Full name
+            </FormLabel>
             <input name="full_name" required placeholder="Full name" className="w-full rounded-md border px-3 py-2 text-sm" />
           </label>
           <label className="space-y-1">

@@ -6,6 +6,7 @@ import { InvoiceItemsFields } from "@/app/dashboard/billing/invoice-items-fields
 import SubmitButton from "@/app/dashboard/submit-button"
 import { ArrowLeft, Save } from "lucide-react"
 import { dashboardPrimaryButtonClass } from "@/lib/dashboard-action-styles"
+import { FormLabel } from "@/components/form-label"
 
 export default async function NewInvoicePage({
   searchParams,
@@ -45,7 +46,9 @@ export default async function NewInvoicePage({
       <form action={createInvoiceAction} className="rounded-lg border bg-white p-4">
         <div className="grid gap-3 md:grid-cols-2">
           <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Patient</span>
+            <FormLabel required className="block text-sm font-medium text-slate-700">
+              Patient
+            </FormLabel>
             <select name="patient_id" required className="w-full rounded-md border px-3 py-2 text-sm">
               <option value="">Select patient</option>
               {patients?.map((patient) => (
@@ -67,7 +70,9 @@ export default async function NewInvoicePage({
             </select>
           </label>
           <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Invoice date</span>
+            <FormLabel required className="block text-sm font-medium text-slate-700">
+              Invoice date
+            </FormLabel>
             <input name="invoice_date" type="date" required className="w-full rounded-md border px-3 py-2 text-sm" />
           </label>
           <label className="space-y-1">

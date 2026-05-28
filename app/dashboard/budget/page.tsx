@@ -22,6 +22,7 @@ import { requireAdmin } from "@/lib/auth"
 import type { ClinicExpense, ClinicMonthlyBudget } from "@/lib/database.types"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import SubmitButton from "../submit-button"
+import { FormLabel } from "@/components/form-label"
 
 const PAGE_SIZE = 10
 
@@ -197,7 +198,9 @@ export default async function BudgetPage({
         <input type="hidden" name="month" value={month} />
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           <label className="block text-sm">
-            <span className="text-muted-foreground">Amount (INR)</span>
+            <FormLabel required className="text-muted-foreground">
+              Amount (INR)
+            </FormLabel>
             <input
               name="allocated_amount"
               type="number"
@@ -247,7 +250,9 @@ export default async function BudgetPage({
           <input type="hidden" name="expense_id" value={editingExpense.id} />
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             <label className="block text-sm">
-              <span className="text-muted-foreground">Date</span>
+              <FormLabel required className="text-muted-foreground">
+                Date
+              </FormLabel>
               <input
                 name="expense_date"
                 type="date"
@@ -257,7 +262,9 @@ export default async function BudgetPage({
               />
             </label>
             <label className="block text-sm">
-              <span className="text-muted-foreground">Amount (INR)</span>
+              <FormLabel required className="text-muted-foreground">
+                Amount (INR)
+              </FormLabel>
               <input
                 name="amount"
                 type="number"
@@ -269,7 +276,9 @@ export default async function BudgetPage({
               />
             </label>
             <label className="block text-sm">
-              <span className="text-muted-foreground">Category</span>
+              <FormLabel required className="text-muted-foreground">
+                Category
+              </FormLabel>
               <input
                 name="category"
                 required
@@ -306,7 +315,9 @@ export default async function BudgetPage({
           <input type="hidden" name="month" value={month} />
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             <label className="block text-sm">
-              <span className="text-muted-foreground">Date</span>
+              <FormLabel required className="text-muted-foreground">
+                Date
+              </FormLabel>
               <input
                 name="expense_date"
                 type="date"
@@ -316,7 +327,9 @@ export default async function BudgetPage({
               />
             </label>
             <label className="block text-sm">
-              <span className="text-muted-foreground">Amount (INR)</span>
+              <FormLabel required className="text-muted-foreground">
+                Amount (INR)
+              </FormLabel>
               <input
                 name="amount"
                 type="number"
@@ -327,7 +340,9 @@ export default async function BudgetPage({
               />
             </label>
             <label className="block text-sm">
-              <span className="text-muted-foreground">Category</span>
+              <FormLabel required className="text-muted-foreground">
+                Category
+              </FormLabel>
               <input
                 name="category"
                 required

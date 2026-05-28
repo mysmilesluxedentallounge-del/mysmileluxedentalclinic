@@ -63,6 +63,7 @@ export type InvoiceItem = {
   treatment_name: string
   treatment_date: string | null
   cost: number
+  offer_amount: number | null
   sort_order: number
   created_at: string
 }

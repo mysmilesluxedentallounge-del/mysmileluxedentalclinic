@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 import { PDFDocument, StandardFonts, degrees, rgb } from "pdf-lib"
+import { fetchInvoiceItems } from "@/lib/invoice-items-query"
+import { fetchDoctorForInvoice, fetchInvoiceById, sanitizePdfText } from "@/lib/invoice-query"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 type InvoicePayload = {
@@ -17,7 +19,12 @@ type InvoiceItemPayload = {
   treatment_name: string
   treatment_date: string | null
   cost: number | string
+  offer_amount: number | string | null
   sort_order: number
+}
+
+function invoiceLineAmount(cost: number, offerAmount: number | null) {
+  return offerAmount !== null ? offerAmount : cost
 }
 
 const DEFAULT_DOCTOR_QUALIFICATION = process.env.DEFAULT_DOCTOR_QUALIFICATION || "BDS, MDS"
@@ -97,32 +104,14 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
     const { id } = await context.params
 
-    const { data: invoiceDataWithUpi, error: invoiceWithUpiError } = await supabase
-      .from("invoices")
-      .select("id, patient_id, appointment_id, amount, status, invoice_date, payment_method, upi_transaction_id, include_treatment_date, notes")
-      .eq("id", id)
-      .maybeSingle()
-
-    let invoiceData = invoiceDataWithUpi
-    if (invoiceWithUpiError?.message?.includes("upi_transaction_id")) {
-      const { data: fallbackInvoiceData, error: fallbackInvoiceError } = await supabase
-        .from("invoices")
-        .select("id, patient_id, appointment_id, amount, status, invoice_date, payment_method, notes")
-        .eq("id", id)
-        .maybeSingle()
-      if (fallbackInvoiceError || !fallbackInvoiceData) {
-        return NextResponse.json({ error: "Invoice not found" }, { status: 404 })
-      }
-      invoiceData = { ...fallbackInvoiceData, upi_transaction_id: null, include_treatment_date: true }
-    }
-
-    if (!invoiceData) {
+    const invoiceRecord = await fetchInvoiceById(supabase, id)
+    if (!invoiceRecord) {
       return NextResponse.json({ error: "Invoice not found" }, { status: 404 })
     }
 
-    const invoice = invoiceData as InvoicePayload & { patient_id: string; appointment_id: string | null }
+    const invoice = invoiceRecord as InvoicePayload & { patient_id: string; appointment_id: string | null }
 
-    const [{ data: patientData }, { data: appointmentData }, { data: invoiceItemsData }] = await Promise.all([
+    const [{ data: patientData }, { data: appointmentData }, invoiceItemsData] = await Promise.all([
       supabase.from("patients").select("id, full_name, phone, dob, gender").eq("id", invoice.patient_id).maybeSingle(),
       invoice.appointment_id
         ? supabase
@@ -131,36 +120,43 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
             .eq("id", invoice.appointment_id)
             .maybeSingle()
         : Promise.resolve({ data: null }),
-      supabase
-        .from("invoice_items")
-        .select("treatment_name, treatment_date, cost, sort_order")
-        .eq("invoice_id", invoice.id)
-        .order("sort_order"),
+      fetchInvoiceItems(supabase, invoice.id),
     ])
-    const { data: doctorData } = appointmentData?.doctor_id
-      ? await supabase
-          .from("profiles")
-          .select("full_name, doctor_signature")
-          .eq("id", appointmentData.doctor_id)
-          .maybeSingle()
-      : { data: null }
+    const doctorData = appointmentData?.doctor_id
+      ? await fetchDoctorForInvoice(supabase, appointmentData.doctor_id)
+      : null
 
-    const parsedInvoiceItems = (invoiceItemsData ?? []) as InvoiceItemPayload[]
+    const parsedInvoiceItems = invoiceItemsData as InvoiceItemPayload[]
     const treatmentRows =
       parsedInvoiceItems.length > 0
-        ? parsedInvoiceItems.map((item) => ({
-            treatment_name: item.treatment_name,
-            treatment_date: item.treatment_date ?? null,
-            cost: Number.isNaN(Number(item.cost)) ? 0 : Number(item.cost),
-          }))
+        ? parsedInvoiceItems.map((item) => {
+            const cost = Number.isNaN(Number(item.cost)) ? 0 : Number(item.cost)
+            const offerRaw = item.offer_amount
+            const offer_amount =
+              offerRaw === null || offerRaw === undefined || offerRaw === ""
+                ? null
+                : Number.isNaN(Number(offerRaw))
+                  ? null
+                  : Number(offerRaw)
+            return {
+              treatment_name: item.treatment_name,
+              treatment_date: item.treatment_date ?? null,
+              cost,
+              offer_amount,
+              line_amount: invoiceLineAmount(cost, offer_amount),
+            }
+          })
         : [
             {
               treatment_name: appointmentData?.treatment || "Consultation / Treatment",
               treatment_date: null as string | null,
               cost: Number(invoice.amount),
+              offer_amount: null as number | null,
+              line_amount: Number(invoice.amount),
             },
           ]
-    const subtotal = treatmentRows.reduce((sum, item) => sum + (Number.isNaN(item.cost) ? 0 : item.cost), 0)
+    const showOfferCol = treatmentRows.some((item) => item.offer_amount !== null)
+    const subtotal = treatmentRows.reduce((sum, item) => sum + item.line_amount, 0)
     const total = subtotal
 
     const pdfDoc = await PDFDocument.create()
@@ -277,7 +273,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     })
 
     page.drawText("Patient Details", { x: 40, y: height - 220, size: 11, font: fontBold, color: rgb(0.1, 0.1, 0.1) })
-    page.drawText(`Name: ${patientData?.full_name || "Patient"}`, {
+    page.drawText(`Name: ${sanitizePdfText(patientData?.full_name || "Patient")}`, {
       x: 40,
       y: height - 232,
       size: 10,
@@ -310,7 +306,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     })
 
     page.drawText("Doctor Details", { x: 316, y: height - 220, size: 11, font: fontBold, color: rgb(0.1, 0.1, 0.1) })
-    page.drawText(`Name: ${doctorData?.full_name || "Dr Shridha Prabhu"}`, {
+    page.drawText(`Name: ${sanitizePdfText(doctorData?.full_name || "Dr Shridha Prabhu")}`, {
       x: 316,
       y: height - 232,
       size: 10,
@@ -342,8 +338,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
     const colSNo = tableX + 10
     const colTreatment = tableX + 55
-    const colDate = showDateCol ? tableX + tableWidth - 210 : null
-    const colCost = tableX + tableWidth - 90
+    const colDate = showDateCol ? (showOfferCol ? tableX + tableWidth - 300 : tableX + tableWidth - 210) : null
+    const colAmount = showOfferCol ? tableX + tableWidth - 200 : null
+    const colOffer = showOfferCol ? tableX + tableWidth - 100 : null
+    const colCost = showOfferCol ? null : tableX + tableWidth - 90
 
     page.drawRectangle({ x: tableX, y: tableY, width: tableWidth, height: rowHeight, color: rgb(0.93, 0.95, 0.98) })
     page.drawText("S.No", { x: colSNo, y: tableY + 10, size: 10, font: fontBold })
@@ -351,7 +349,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     if (showDateCol && colDate !== null) {
       page.drawText("Date", { x: colDate, y: tableY + 10, size: 10, font: fontBold })
     }
-    page.drawText("Cost", { x: colCost, y: tableY + 10, size: 10, font: fontBold })
+    if (showOfferCol && colAmount !== null && colOffer !== null) {
+      page.drawText("Amount", { x: colAmount, y: tableY + 10, size: 10, font: fontBold })
+      page.drawText("Offer", { x: colOffer, y: tableY + 10, size: 10, font: fontBold })
+    } else if (colCost !== null) {
+      page.drawText("Cost", { x: colCost, y: tableY + 10, size: 10, font: fontBold })
+    }
 
     treatmentRows.forEach((item, index) => {
       const rowY = tableY - rowHeight * (index + 1)
@@ -370,7 +373,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         font: fontRegular,
         color: rgb(0.15, 0.15, 0.15),
       })
-      page.drawText(item.treatment_name.slice(0, showDateCol ? 40 : 62), {
+      const nameMaxLen = showOfferCol ? 32 : showDateCol ? 40 : 62
+      page.drawText(sanitizePdfText(item.treatment_name).slice(0, nameMaxLen), {
         x: colTreatment,
         y: rowY + 10,
         size: 10,
@@ -392,18 +396,38 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
           color: rgb(0.15, 0.15, 0.15),
         })
       }
-      page.drawText(formatCurrency(item.cost), {
-        x: colCost,
-        y: rowY + 10,
-        size: 10,
-        font: fontRegular,
-        color: rgb(0.15, 0.15, 0.15),
-      })
+      if (showOfferCol && colAmount !== null && colOffer !== null) {
+        page.drawText(formatCurrency(item.cost), {
+          x: colAmount,
+          y: rowY + 10,
+          size: 10,
+          font: fontRegular,
+          color: rgb(0.15, 0.15, 0.15),
+        })
+        page.drawText(
+          item.offer_amount !== null ? formatCurrency(item.offer_amount) : "-",
+          {
+            x: colOffer,
+            y: rowY + 10,
+            size: 10,
+            font: fontRegular,
+            color: rgb(0.15, 0.15, 0.15),
+          }
+        )
+      } else if (colCost !== null) {
+        page.drawText(formatCurrency(item.line_amount), {
+          x: colCost,
+          y: rowY + 10,
+          size: 10,
+          font: fontRegular,
+          color: rgb(0.15, 0.15, 0.15),
+        })
+      }
     })
 
     // Subtotal and total aligned at table end under cost column.
-    const summaryLabelX = tableX + tableWidth - 170
-    const summaryValueX = tableX + tableWidth - 90
+    const summaryLabelX = tableX + tableWidth - (showOfferCol ? 200 : 170)
+    const summaryValueX = tableX + tableWidth - (showOfferCol ? 100 : 90)
     const summaryStartY = tableY - rowHeight * (treatmentRows.length + 1) - 22
     page.drawText("Subtotal", {
       x: summaryLabelX,

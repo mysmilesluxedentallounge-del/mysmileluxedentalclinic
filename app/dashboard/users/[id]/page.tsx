@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth"
 import { updateStaffUserAction } from "@/lib/dashboard-actions"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { dashboardPrimaryButtonClass } from "@/lib/dashboard-action-styles"
+import { FormLabel } from "@/components/form-label"
 
 export default async function EditUserPage({
   params,
@@ -44,7 +45,9 @@ export default async function EditUserPage({
         <input type="hidden" name="user_id" value={user.id} />
         <div className="grid gap-3 md:grid-cols-2">
           <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Full name</span>
+            <FormLabel required className="block text-sm font-medium text-slate-700">
+              Full name
+            </FormLabel>
             <input
               name="full_name"
               required

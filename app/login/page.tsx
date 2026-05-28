@@ -4,6 +4,7 @@ import Image from "next/image"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
+import { FormLabel } from "@/components/form-label"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -54,7 +55,9 @@ export default function LoginPage() {
 
         <form action={handleSubmit} className="mt-6 space-y-4">
           <label className="block">
-            <span className="mb-1 block text-sm font-medium">Email</span>
+            <FormLabel required className="mb-1 block text-sm font-medium">
+              Email
+            </FormLabel>
             <input
               name="email"
               type="email"
@@ -64,7 +67,9 @@ export default function LoginPage() {
           </label>
 
           <label className="block">
-            <span className="mb-1 block text-sm font-medium">Password</span>
+            <FormLabel required className="mb-1 block text-sm font-medium">
+              Password
+            </FormLabel>
             <div className="relative">
               <input
                 name="password"

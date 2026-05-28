@@ -7,6 +7,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { InvoiceItemsFields } from "@/app/dashboard/billing/invoice-items-fields"
 import SubmitButton from "@/app/dashboard/submit-button"
 import { dashboardDangerOutlineButtonClass, dashboardPrimaryButtonClass } from "@/lib/dashboard-action-styles"
+import { FormLabel } from "@/components/form-label"
+import { fetchInvoiceItems } from "@/lib/invoice-items-query"
+import { fetchInvoiceById } from "@/lib/invoice-query"
 
 function extractUpiTxnIdFromNotes(notes: string | null | undefined) {
   if (!notes) return null
@@ -35,43 +38,25 @@ export default async function EditInvoicePage({
   const { error } = await searchParams
   const supabase = await createSupabaseServerClient()
 
-  const [{ data: invoiceWithUpi, error: invoiceWithUpiError }, { data: patients }, { data: appointments }] =
-    await Promise.all([
-      supabase
-        .from("invoices")
-        .select("id, patient_id, appointment_id, amount, status, payment_method, upi_transaction_id, include_treatment_date, invoice_date, notes")
-        .eq("id", id)
-        .maybeSingle(),
-      supabase.from("patients").select("id, full_name").order("full_name"),
-      supabase.from("appointments").select("id, patient_id, appointment_date").order("appointment_date", { ascending: false }),
-    ])
-
-  let invoice = invoiceWithUpi
-  if (invoiceWithUpiError?.message?.includes("upi_transaction_id")) {
-    const { data: fallbackInvoice } = await supabase
-      .from("invoices")
-      .select("id, patient_id, appointment_id, amount, status, payment_method, invoice_date, notes")
-      .eq("id", id)
-      .maybeSingle()
-    invoice = fallbackInvoice ? { ...fallbackInvoice, upi_transaction_id: null, include_treatment_date: true } : null
-  }
+  const [invoice, { data: patients }, { data: appointments }] = await Promise.all([
+    fetchInvoiceById(supabase, id),
+    supabase.from("patients").select("id, full_name").order("full_name"),
+    supabase.from("appointments").select("id, patient_id, appointment_date").order("appointment_date", { ascending: false }),
+  ])
 
   if (!invoice) {
     notFound()
   }
 
-  const { data: invoiceItems } = await supabase
-    .from("invoice_items")
-    .select("treatment_name, treatment_date, cost, sort_order")
-    .eq("invoice_id", invoice.id)
-    .order("sort_order")
+  const invoiceItems = await fetchInvoiceItems(supabase, invoice.id)
 
   let initialItems =
-    invoiceItems?.map((item) => ({
+    invoiceItems.map((item) => ({
       treatment_name: item.treatment_name ?? "",
       treatment_date: item.treatment_date ?? "",
       cost: String(item.cost ?? ""),
-    })) ?? []
+      offer_amount: item.offer_amount != null ? String(item.offer_amount) : "",
+    }))
 
   if (initialItems.length === 0) {
     const { data: appointmentForFallback } = invoice.appointment_id
@@ -83,6 +68,7 @@ export default async function EditInvoicePage({
         treatment_name: appointmentForFallback?.treatment || "Consultation / Treatment",
         treatment_date: "",
         cost: String(invoice.amount ?? ""),
+        offer_amount: "",
       },
     ]
   }
@@ -110,7 +96,9 @@ export default async function EditInvoicePage({
           <input type="hidden" name="invoice_id" value={invoice.id} />
           <div className="grid gap-3 md:grid-cols-2">
             <label className="space-y-1">
-              <span className="block text-sm font-medium text-slate-700">Patient</span>
+              <FormLabel required className="block text-sm font-medium text-slate-700">
+                Patient
+              </FormLabel>
               <select name="patient_id" required defaultValue={invoice.patient_id} className="w-full rounded-md border px-3 py-2 text-sm">
                 <option value="">Select patient</option>
                 {patients?.map((patient) => (
@@ -132,7 +120,9 @@ export default async function EditInvoicePage({
               </select>
             </label>
             <label className="space-y-1">
-              <span className="block text-sm font-medium text-slate-700">Invoice date</span>
+              <FormLabel required className="block text-sm font-medium text-slate-700">
+                Invoice date
+              </FormLabel>
               <input
                 name="invoice_date"
                 type="date"

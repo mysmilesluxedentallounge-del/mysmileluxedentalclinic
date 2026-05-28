@@ -7,6 +7,7 @@ import ChiefComplaintFields from "@/app/dashboard/appointments/chief-complaint-f
 import SubmitButton from "@/app/dashboard/submit-button"
 import { BOOKING_TIME_SLOTS } from "@/lib/appointment-schedule"
 import { dashboardPrimaryButtonClass } from "@/lib/dashboard-action-styles"
+import { FormLabel } from "@/components/form-label"
 
 const DEFAULT_DOCTOR_NAME = "Dr Shridha Prabhu"
 
@@ -58,7 +59,9 @@ export default async function NewAppointmentPage({
       <form action={createAppointmentAction} className="rounded-lg border bg-white p-4">
         <div className="grid gap-3 md:grid-cols-2">
           <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Patient</span>
+            <FormLabel required className="block text-sm font-medium text-slate-700">
+              Patient
+            </FormLabel>
             <select name="patient_id" required className="w-full rounded-md border px-3 py-2 text-sm">
               <option value="">Select patient</option>
               {patients?.map((patient) => (
@@ -87,11 +90,15 @@ export default async function NewAppointmentPage({
           </div>
 
           <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Appointment date</span>
+            <FormLabel required className="block text-sm font-medium text-slate-700">
+              Appointment date
+            </FormLabel>
             <input name="appointment_date" type="date" required className="w-full rounded-md border px-3 py-2 text-sm" />
           </label>
           <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Appointment time</span>
+            <FormLabel required className="block text-sm font-medium text-slate-700">
+              Appointment time
+            </FormLabel>
             <select name="appointment_time" required className="w-full rounded-md border px-3 py-2 text-sm">
               <option value="">Select time slot</option>
               {BOOKING_TIME_SLOTS.map((slot) => (

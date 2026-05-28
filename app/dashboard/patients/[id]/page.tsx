@@ -7,6 +7,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 import type { Patient } from "@/lib/database.types"
 import { dashboardDangerOutlineButtonClass, dashboardPrimaryButtonClass } from "@/lib/dashboard-action-styles"
 import PatientClinicalFields from "@/app/dashboard/patients/patient-clinical-fields"
+import { FormLabel } from "@/components/form-label"
 
 export default async function PatientDetailPage({
   params,
@@ -78,7 +79,9 @@ export default async function PatientDetailPage({
         <input type="hidden" name="patient_id" value={patient.id} />
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Full name</span>
+            <FormLabel required className="block text-sm font-medium text-slate-700">
+              Full name
+            </FormLabel>
             <input
               name="full_name"
               required

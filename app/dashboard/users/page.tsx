@@ -11,6 +11,7 @@ import {
 } from "@/lib/dashboard-table"
 import { createStaffUserAction } from "@/lib/dashboard-actions"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { FormLabel } from "@/components/form-label"
 
 type UsersSearchParams = {
   page?: string
@@ -51,15 +52,21 @@ export default async function UsersPage({
         <h2 className="text-lg font-semibold">Add new user</h2>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Full name</span>
+            <FormLabel required className="block text-sm font-medium text-slate-700">
+              Full name
+            </FormLabel>
             <input name="full_name" required placeholder="Full name" className="w-full rounded-md border px-3 py-2 text-sm" />
           </label>
           <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Email</span>
+            <FormLabel required className="block text-sm font-medium text-slate-700">
+              Email
+            </FormLabel>
             <input name="email" required type="email" placeholder="Email" className="w-full rounded-md border px-3 py-2 text-sm" />
           </label>
           <label className="space-y-1">
-            <span className="block text-sm font-medium text-slate-700">Temporary password</span>
+            <FormLabel required className="block text-sm font-medium text-slate-700">
+              Temporary password
+            </FormLabel>
             <input
               name="password"
               required

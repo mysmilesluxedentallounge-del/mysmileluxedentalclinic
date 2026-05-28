@@ -2,36 +2,42 @@
 
 import { useMemo, useState } from "react"
 import { Plus, Trash2 } from "lucide-react"
+import { FormLabel } from "@/components/form-label"
 
 type InvoiceItemInput = {
   treatment_name: string
   treatment_date: string
   cost: string
+  offer_amount: string
 }
 
 function normalizeInitialItems(items: InvoiceItemInput[]) {
   if (items.length > 0) return items
-  return [{ treatment_name: "", treatment_date: "", cost: "" }]
+  return [{ treatment_name: "", treatment_date: "", cost: "", offer_amount: "" }]
+}
+
+function lineAmount(item: InvoiceItemInput) {
+  const offer = item.offer_amount.trim()
+  if (offer !== "") {
+    const offerValue = Number(offer)
+    if (!Number.isNaN(offerValue) && offerValue >= 0) return offerValue
+  }
+  const costValue = Number(item.cost)
+  if (!Number.isNaN(costValue) && costValue >= 0) return costValue
+  return 0
 }
 
 export function InvoiceItemsFields({ initialItems = [] }: { initialItems?: InvoiceItemInput[] }) {
   const [items, setItems] = useState<InvoiceItemInput[]>(normalizeInitialItems(initialItems))
 
-  const total = useMemo(
-    () =>
-      items.reduce((sum, item) => {
-        const value = Number(item.cost)
-        return Number.isNaN(value) || value <= 0 ? sum : sum + value
-      }, 0),
-    [items]
-  )
+  const total = useMemo(() => items.reduce((sum, item) => sum + lineAmount(item), 0), [items])
 
   function updateItem(index: number, field: keyof InvoiceItemInput, value: string) {
     setItems((prev) => prev.map((item, itemIndex) => (itemIndex === index ? { ...item, [field]: value } : item)))
   }
 
   function addItem() {
-    setItems((prev) => [...prev, { treatment_name: "", treatment_date: "", cost: "" }])
+    setItems((prev) => [...prev, { treatment_name: "", treatment_date: "", cost: "", offer_amount: "" }])
   }
 
   function removeItem(index: number) {
@@ -57,9 +63,11 @@ export function InvoiceItemsFields({ initialItems = [] }: { initialItems?: Invoi
 
       <div className="space-y-2">
         {items.map((item, index) => (
-          <div key={`item-row-${index}`} className="grid gap-2 md:grid-cols-[1fr_160px_160px_auto]">
+          <div key={`item-row-${index}`} className="grid gap-2 md:grid-cols-[1fr_140px_120px_120px_auto]">
             <label className="space-y-1">
-              <span className="block text-xs font-medium text-slate-600">Treatment name</span>
+              <FormLabel required className="block text-xs font-medium text-slate-600">
+                Treatment name
+              </FormLabel>
               <input
                 name="item_treatment_name"
                 value={item.treatment_name}
@@ -80,7 +88,9 @@ export function InvoiceItemsFields({ initialItems = [] }: { initialItems?: Invoi
               />
             </label>
             <label className="space-y-1">
-              <span className="block text-xs font-medium text-slate-600">Cost</span>
+              <FormLabel required className="block text-xs font-medium text-slate-600">
+                Amount
+              </FormLabel>
               <input
                 name="item_cost"
                 type="number"
@@ -88,9 +98,22 @@ export function InvoiceItemsFields({ initialItems = [] }: { initialItems?: Invoi
                 step="0.01"
                 value={item.cost}
                 onChange={(event) => updateItem(index, "cost", event.target.value)}
-                placeholder="Cost"
+                placeholder="0.00"
                 className="w-full rounded-md border px-3 py-2 text-sm"
                 required
+              />
+            </label>
+            <label className="space-y-1">
+              <span className="block text-xs font-medium text-slate-600">Offer amount</span>
+              <input
+                name="item_offer_amount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={item.offer_amount}
+                onChange={(event) => updateItem(index, "offer_amount", event.target.value)}
+                placeholder="Optional"
+                className="w-full rounded-md border px-3 py-2 text-sm"
               />
             </label>
             <button
@@ -109,6 +132,9 @@ export function InvoiceItemsFields({ initialItems = [] }: { initialItems?: Invoi
       <div className="rounded-md border bg-slate-50 px-3 py-2 text-sm">
         <span className="font-medium">Total: </span>
         INR {new Intl.NumberFormat("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(total)}
+        <span className="mt-1 block text-xs text-slate-500">
+          Uses offer amount when set; otherwise uses the normal amount. Zero rupees is allowed.
+        </span>
       </div>
     </div>
   )
