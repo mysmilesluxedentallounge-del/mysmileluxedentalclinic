@@ -13,6 +13,7 @@ type InvoicePayload = {
   upi_transaction_id: string | null
   include_treatment_date: boolean | null
   notes: string | null
+  created_at: string | null
 }
 
 type InvoiceItemPayload = {
@@ -254,6 +255,22 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       color: rgb(0.2, 0.2, 0.2),
     })
 
+    // Time the invoice was generated (falls back to now for legacy rows).
+    const invoiceStamp = invoice.created_at ? new Date(invoice.created_at) : new Date()
+    const validStamp = Number.isNaN(invoiceStamp.getTime()) ? new Date() : invoiceStamp
+    const formattedTime = validStamp.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
+    page.drawText(`Time: ${formattedTime}`, {
+      x: 430,
+      y: height - 94,
+      size: 9,
+      font: fontRegular,
+      color: rgb(0.2, 0.2, 0.2),
+    })
+
     // Symmetric blocks for patient and doctor details.
     page.drawRectangle({
       x: 28,
@@ -338,9 +355,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
     const colSNo = tableX + 10
     const colTreatment = tableX + 55
-    const colDate = showDateCol ? (showOfferCol ? tableX + tableWidth - 300 : tableX + tableWidth - 210) : null
-    const colAmount = showOfferCol ? tableX + tableWidth - 200 : null
-    const colOffer = showOfferCol ? tableX + tableWidth - 100 : null
+    const colDate = showDateCol ? (showOfferCol ? tableX + tableWidth - 330 : tableX + tableWidth - 210) : null
+    const colAmount = showOfferCol ? tableX + tableWidth - 250 : null
+    const colDiscount = showOfferCol ? tableX + tableWidth - 160 : null
+    const colPayable = showOfferCol ? tableX + tableWidth - 70 : null
     const colCost = showOfferCol ? null : tableX + tableWidth - 90
 
     page.drawRectangle({ x: tableX, y: tableY, width: tableWidth, height: rowHeight, color: rgb(0.93, 0.95, 0.98) })
@@ -349,9 +367,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     if (showDateCol && colDate !== null) {
       page.drawText("Date", { x: colDate, y: tableY + 10, size: 10, font: fontBold })
     }
-    if (showOfferCol && colAmount !== null && colOffer !== null) {
+    if (showOfferCol && colAmount !== null && colDiscount !== null && colPayable !== null) {
       page.drawText("Amount", { x: colAmount, y: tableY + 10, size: 10, font: fontBold })
-      page.drawText("Offer", { x: colOffer, y: tableY + 10, size: 10, font: fontBold })
+      page.drawText("Discount %", { x: colDiscount, y: tableY + 10, size: 10, font: fontBold })
+      page.drawText("Payable", { x: colPayable, y: tableY + 10, size: 10, font: fontBold })
     } else if (colCost !== null) {
       page.drawText("Cost", { x: colCost, y: tableY + 10, size: 10, font: fontBold })
     }
@@ -373,7 +392,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         font: fontRegular,
         color: rgb(0.15, 0.15, 0.15),
       })
-      const nameMaxLen = showOfferCol ? 32 : showDateCol ? 40 : 62
+      const nameMaxLen = showOfferCol ? (showDateCol ? 18 : 26) : showDateCol ? 40 : 62
       page.drawText(sanitizePdfText(item.treatment_name).slice(0, nameMaxLen), {
         x: colTreatment,
         y: rowY + 10,
@@ -396,7 +415,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
           color: rgb(0.15, 0.15, 0.15),
         })
       }
-      if (showOfferCol && colAmount !== null && colOffer !== null) {
+      if (showOfferCol && colAmount !== null && colDiscount !== null && colPayable !== null) {
+        // Discount is entered as a percentage; derive it back from the stored net payable.
+        const discountValue = item.offer_amount !== null ? Math.max(0, item.cost - item.offer_amount) : 0
+        const discountPercent = discountValue > 0 && item.cost > 0 ? (discountValue / item.cost) * 100 : 0
         page.drawText(formatCurrency(item.cost), {
           x: colAmount,
           y: rowY + 10,
@@ -404,16 +426,20 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
           font: fontRegular,
           color: rgb(0.15, 0.15, 0.15),
         })
-        page.drawText(
-          item.offer_amount !== null ? formatCurrency(item.offer_amount) : "-",
-          {
-            x: colOffer,
-            y: rowY + 10,
-            size: 10,
-            font: fontRegular,
-            color: rgb(0.15, 0.15, 0.15),
-          }
-        )
+        page.drawText(discountPercent > 0 ? `${Number(discountPercent.toFixed(2))}%` : "-", {
+          x: colDiscount,
+          y: rowY + 10,
+          size: 10,
+          font: fontRegular,
+          color: rgb(0.15, 0.15, 0.15),
+        })
+        page.drawText(formatCurrency(item.line_amount), {
+          x: colPayable,
+          y: rowY + 10,
+          size: 10,
+          font: fontRegular,
+          color: rgb(0.15, 0.15, 0.15),
+        })
       } else if (colCost !== null) {
         page.drawText(formatCurrency(item.line_amount), {
           x: colCost,
@@ -425,9 +451,9 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       }
     })
 
-    // Subtotal and total aligned at table end under cost column.
-    const summaryLabelX = tableX + tableWidth - (showOfferCol ? 200 : 170)
-    const summaryValueX = tableX + tableWidth - (showOfferCol ? 100 : 90)
+    // Subtotal and total aligned at table end under the payable column.
+    const summaryLabelX = tableX + tableWidth - (showOfferCol ? 160 : 170)
+    const summaryValueX = tableX + tableWidth - (showOfferCol ? 70 : 90)
     const summaryStartY = tableY - rowHeight * (treatmentRows.length + 1) - 22
     page.drawText("Subtotal", {
       x: summaryLabelX,
@@ -517,37 +543,93 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       const sealPath = path.join(process.cwd(), "public", "mysmileSeal.png")
       const sealFileBytes = await fs.readFile(sealPath)
       const sealImage = await pdfDoc.embedPng(sealFileBytes)
-      page.drawImage(sealImage, { x: 415, y: 55, width: 160, height: 160, rotate: degrees(10) })
+      page.drawImage(sealImage, { x: 435, y: 132, width: 120, height: 120, rotate: degrees(10) })
     } catch {
       try {
         const sealResponse = await fetch("https://mysmileluxedentallounge.com/mysmileSeal.png", { cache: "no-store" })
         if (sealResponse.ok) {
           const sealBytes = await sealResponse.arrayBuffer()
           const sealImage = await pdfDoc.embedPng(sealBytes)
-          page.drawImage(sealImage, { x: 415, y: 55, width: 160, height: 160, rotate: degrees(10) })
+          page.drawImage(sealImage, { x: 435, y: 132, width: 120, height: 120, rotate: degrees(10) })
         }
       } catch {
         // seal unavailable — skip silently
       }
     }
 
-    const signatureDrawn = await drawDoctorSignature(pdfDoc, page, doctorData?.doctor_signature, 430, 55)
-    if (signatureDrawn) {
-      page.drawText("Doctor Signature", {
-        x: 430,
-        y: 43,
-        size: 8,
+    // Doctor signature — sits just above the seal.
+    // Priority: 1) signature uploaded on the doctor profile, 2) bundled signature image file.
+    const signatureBoxX = 420
+    const signatureBoxY = 220
+    let signatureDrawn = await drawDoctorSignature(pdfDoc, page, doctorData?.doctor_signature, signatureBoxX + 12, signatureBoxY + 2)
+
+    if (!signatureDrawn) {
+      try {
+        const fs = await import("fs/promises")
+        const path = await import("path")
+        const signaturePath = path.join(process.cwd(), "public", "doctors", "Signature", "Shridha_sign.png")
+        const signatureFileBytes = await fs.readFile(signaturePath)
+        const signatureImage = await pdfDoc.embedPng(signatureFileBytes)
+        // Preserve aspect ratio inside the signature area.
+        const maxWidth = 130
+        const maxHeight = 46
+        const scale = Math.min(maxWidth / signatureImage.width, maxHeight / signatureImage.height)
+        page.drawImage(signatureImage, {
+          x: signatureBoxX + 12,
+          y: signatureBoxY + 2,
+          width: signatureImage.width * scale,
+          height: signatureImage.height * scale,
+        })
+        signatureDrawn = true
+      } catch {
+        // bundled signature file unavailable — fall through to the placeholder box
+      }
+    }
+
+    if (!signatureDrawn) {
+      page.drawRectangle({
+        x: signatureBoxX,
+        y: signatureBoxY,
+        width: 150,
+        height: 44,
+        borderColor: rgb(0.82, 0.84, 0.87),
+        borderWidth: 1,
+      })
+      page.drawText("[ Signature ]", {
+        x: signatureBoxX + 46,
+        y: signatureBoxY + 18,
+        size: 9,
         font: fontRegular,
-        color: rgb(0.3, 0.3, 0.3),
+        color: rgb(0.7, 0.72, 0.75),
       })
     }
+    // No separating rule: the seal is drawn first and the signature sits directly
+    // on top of it, so there is no visible gap between them.
+    page.drawText("Doctor Signature", {
+      x: signatureBoxX + 38,
+      y: 108,
+      size: 8,
+      font: fontRegular,
+      color: rgb(0.3, 0.3, 0.3),
+    })
+
+    // Name the file after the patient and invoice date, e.g. "Invoice-John-Doe-2026-07-09.pdf".
+    const patientSlug =
+      sanitizePdfText(patientData?.full_name || "Patient")
+        .replace(/[^\w\s-]/g, "")
+        .trim()
+        .replace(/\s+/g, "-") || "Patient"
+    // Time component for the file name, e.g. "03-42-PM".
+    const fileTimePart = formattedTime.replace(/[:\s]/g, "-").replace(/\./g, "").toUpperCase()
+    const documentTitle = `Invoice - ${patientData?.full_name || "Patient"} - ${invoice.invoice_date} ${formattedTime}`
+    pdfDoc.setTitle(documentTitle)
 
     const pdfBytes = await pdfDoc.save()
     return new NextResponse(Buffer.from(pdfBytes), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="invoice-${invoice.id.slice(0, 8)}.pdf"`,
+        "Content-Disposition": `attachment; filename="Invoice-${patientSlug}-${invoice.invoice_date}-${fileTimePart}.pdf"`,
         "Cache-Control": "no-store",
       },
     })

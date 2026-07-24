@@ -32,7 +32,10 @@ export default function DownloadInvoiceButton({ invoiceId }: DownloadInvoiceButt
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement("a")
       anchor.href = url
-      anchor.download = `invoice-${invoiceId.slice(0, 8)}.pdf`
+      // Use the server-provided name (Invoice-<Patient>-<date>.pdf) when present.
+      const disposition = response.headers.get("Content-Disposition") ?? ""
+      const nameMatch = disposition.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i)
+      anchor.download = nameMatch?.[1] ?? `invoice-${invoiceId.slice(0, 8)}.pdf`
       document.body.appendChild(anchor)
       anchor.click()
       anchor.remove()

@@ -8,19 +8,48 @@ import { ArrowLeft, Save } from "lucide-react"
 import { dashboardPrimaryButtonClass } from "@/lib/dashboard-action-styles"
 import { FormLabel } from "@/components/form-label"
 
+type WorkDoneLite = {
+  id: string
+  treatment_name: string
+  work_date: string
+  price: number | string
+}
+
 export default async function NewInvoicePage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; patient?: string; source?: string }>
 }) {
   await requireAuth()
-  const { error } = await searchParams
+  const { error, patient: patientParam, source } = await searchParams
   const supabase = await createSupabaseServerClient()
 
   const [{ data: patients }, { data: appointments }] = await Promise.all([
     supabase.from("patients").select("id, full_name").order("full_name"),
     supabase.from("appointments").select("id, patient_id, appointment_date").order("appointment_date", { ascending: false }),
   ])
+
+  // Optional prefill from a patient's completed, not-yet-invoiced work done.
+  let prefillItems: { treatment_name: string; treatment_date: string; cost: string; offer_amount: string }[] = []
+  let prefillWorkDoneIds: string[] = []
+  const prefillPatientId = source === "work_done" && patientParam ? patientParam : ""
+  if (prefillPatientId) {
+    const { data: completedWork } = await supabase
+      .from("work_done")
+      .select("id, treatment_name, work_date, price")
+      .eq("patient_id", prefillPatientId)
+      .eq("status", "completed")
+      .is("invoice_id", null)
+      .order("work_date")
+    const rows = (completedWork as WorkDoneLite[] | null) ?? []
+    prefillItems = rows.map((row) => ({
+      treatment_name: row.treatment_name,
+      treatment_date: row.work_date ?? "",
+      cost: String(Number(row.price)),
+      offer_amount: "",
+    }))
+    prefillWorkDoneIds = rows.map((row) => row.id)
+  }
 
   return (
     <section className="space-y-6">
@@ -43,13 +72,22 @@ export default async function NewInvoicePage({
         <p className="text-sm text-muted-foreground">Create a new invoice for treatment and payment tracking.</p>
       </header>
 
+      {prefillItems.length > 0 ? (
+        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+          Prefilled {prefillItems.length} completed treatment(s) from Work Done. Review and save to bill them.
+        </p>
+      ) : null}
+
       <form action={createInvoiceAction} className="rounded-lg border bg-white p-4">
+        {prefillWorkDoneIds.map((workDoneId) => (
+          <input key={workDoneId} type="hidden" name="work_done_ids" value={workDoneId} />
+        ))}
         <div className="grid gap-3 md:grid-cols-2">
           <label className="space-y-1">
             <FormLabel required className="block text-sm font-medium text-slate-700">
               Patient
             </FormLabel>
-            <select name="patient_id" required className="w-full rounded-md border px-3 py-2 text-sm">
+            <select name="patient_id" required defaultValue={prefillPatientId} className="w-full rounded-md border px-3 py-2 text-sm">
               <option value="">Select patient</option>
               {patients?.map((patient) => (
                 <option key={patient.id} value={patient.id}>
@@ -112,7 +150,7 @@ export default async function NewInvoicePage({
               Include treatment date column in invoice PDF
             </label>
           </div>
-          <InvoiceItemsFields />
+          <InvoiceItemsFields initialItems={prefillItems} />
           <label className="space-y-1 md:col-span-2">
             <span className="block text-sm font-medium text-slate-700">Notes</span>
             <textarea name="notes" placeholder="Notes" className="w-full rounded-md border px-3 py-2 text-sm" />

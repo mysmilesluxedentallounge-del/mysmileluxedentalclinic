@@ -71,8 +71,11 @@ async function insertInvoiceItems(
     return error
   }
 
-  const fallbackPayload = items.map(({ offer_amount: _offer, ...item }) => ({
-    ...item,
+  const fallbackPayload = items.map((item) => ({
+    treatment_name: item.treatment_name,
+    treatment_date: item.treatment_date,
+    cost: item.cost,
+    sort_order: item.sort_order,
     invoice_id: invoiceId,
   }))
   const { error: fallbackError } = await supabase.from("invoice_items").insert(fallbackPayload)
@@ -222,6 +225,12 @@ export async function updatePatientDetailsAction(formData: FormData) {
 
   revalidatePath("/dashboard/patients")
   revalidatePath(`/dashboard/patients/${patientId}`)
+
+  const detailsRedirectTo = String(formData.get("redirect_to") ?? "").trim()
+  if (detailsRedirectTo.startsWith("/") && !detailsRedirectTo.startsWith("//")) {
+    revalidatePath(detailsRedirectTo)
+    redirect(detailsRedirectTo)
+  }
   redirect(`/dashboard/patients/${patientId}?updated=details`)
 }
 
@@ -313,6 +322,13 @@ export async function createAppointmentAction(formData: FormData) {
   revalidatePath("/dashboard")
   revalidatePath("/dashboard/appointments")
   revalidatePath("/dashboard/patients")
+
+  // Inline forms (e.g. the patient dashboard) stay put instead of jumping to Appointments.
+  const appointmentRedirectTo = String(formData.get("redirect_to") ?? "").trim()
+  if (appointmentRedirectTo.startsWith("/") && !appointmentRedirectTo.startsWith("//")) {
+    revalidatePath(appointmentRedirectTo)
+    redirect(appointmentRedirectTo)
+  }
   redirect("/dashboard/appointments?added=1")
 }
 
@@ -456,9 +472,26 @@ export async function createInvoiceAction(formData: FormData) {
     redirect(`/dashboard/billing/new?error=${encodeURIComponent(itemError.message)}`)
   }
 
+  // Link any work-done records this invoice was generated from (Work Done → Billing).
+  const workDoneIds = formData
+    .getAll("work_done_ids")
+    .map((value) => String(value ?? "").trim())
+    .filter(Boolean)
+  if (workDoneIds.length > 0) {
+    await supabase.from("work_done").update({ invoice_id: invoiceId }).in("id", workDoneIds)
+    revalidatePath(`/dashboard/patients/${patient_id}/work-done`)
+  }
+
   revalidatePath("/dashboard")
   revalidatePath("/dashboard/billing")
   revalidatePath("/dashboard/patients")
+
+  // Inline forms (e.g. on the patient page) can stay put instead of jumping to Billing.
+  const redirectTo = String(formData.get("redirect_to") ?? "").trim()
+  if (redirectTo.startsWith("/") && !redirectTo.startsWith("//")) {
+    revalidatePath(redirectTo)
+    redirect(redirectTo)
+  }
   redirect("/dashboard/billing?added=1")
 }
 

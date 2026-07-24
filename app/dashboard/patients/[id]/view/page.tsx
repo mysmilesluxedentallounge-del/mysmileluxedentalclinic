@@ -5,6 +5,7 @@ import { requireAuth } from "@/lib/auth"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import type { Patient } from "@/lib/database.types"
 import PatientClinicalFields from "@/app/dashboard/patients/patient-clinical-fields"
+import PatientModuleNav from "@/app/dashboard/patients/[id]/patient-module-nav"
 
 export default async function PatientViewPage({
   params,
@@ -47,24 +48,26 @@ export default async function PatientViewPage({
         <p className="mt-1 text-sm text-muted-foreground">{patient.address || "No address"}</p>
       </header>
 
+      <PatientModuleNav patientId={patient.id} />
+
       <section className="rounded-lg border bg-white p-5">
         <h2 className="text-lg font-semibold">Patient details</h2>
         <fieldset disabled className="mt-3 grid gap-3 md:grid-cols-2 disabled:opacity-100">
           <label className="space-y-1">
             <span className="block text-sm font-medium text-slate-700">Full name</span>
-            <input value={patient.full_name ?? ""} className="w-full rounded-md border px-3 py-2 text-sm" />
+            <input defaultValue={patient.full_name ?? ""} readOnly className="w-full rounded-md border px-3 py-2 text-sm" />
           </label>
           <label className="space-y-1">
             <span className="block text-sm font-medium text-slate-700">Phone</span>
-            <input value={patient.phone ?? ""} className="w-full rounded-md border px-3 py-2 text-sm" />
+            <input defaultValue={patient.phone ?? ""} readOnly className="w-full rounded-md border px-3 py-2 text-sm" />
           </label>
           <label className="space-y-1">
             <span className="block text-sm font-medium text-slate-700">Email</span>
-            <input value={patient.email ?? ""} className="w-full rounded-md border px-3 py-2 text-sm" />
+            <input defaultValue={patient.email ?? ""} readOnly className="w-full rounded-md border px-3 py-2 text-sm" />
           </label>
           <label className="space-y-1">
             <span className="block text-sm font-medium text-slate-700">Gender</span>
-            <select value={patient.gender ?? ""} className="w-full rounded-md border px-3 py-2 text-sm">
+            <select defaultValue={patient.gender ?? ""} className="w-full rounded-md border px-3 py-2 text-sm">
               <option value="">Select gender</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
@@ -73,11 +76,11 @@ export default async function PatientViewPage({
           </label>
           <label className="space-y-1">
             <span className="block text-sm font-medium text-slate-700">Date of birth</span>
-            <input type="date" value={patient.dob ?? ""} className="w-full rounded-md border px-3 py-2 text-sm" />
+            <input type="date" defaultValue={patient.dob ?? ""} readOnly className="w-full rounded-md border px-3 py-2 text-sm" />
           </label>
           <label className="space-y-1 md:col-span-2">
             <span className="block text-sm font-medium text-slate-700">Address</span>
-            <input value={patient.address ?? ""} className="w-full rounded-md border px-3 py-2 text-sm" />
+            <input defaultValue={patient.address ?? ""} readOnly className="w-full rounded-md border px-3 py-2 text-sm" />
           </label>
         </fieldset>
       </section>

@@ -7,6 +7,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 import type { Patient } from "@/lib/database.types"
 import { dashboardDangerOutlineButtonClass, dashboardPrimaryButtonClass } from "@/lib/dashboard-action-styles"
 import PatientClinicalFields from "@/app/dashboard/patients/patient-clinical-fields"
+import PatientModuleNav from "@/app/dashboard/patients/[id]/patient-module-nav"
+import PatientClinicalSections from "@/app/dashboard/patients/[id]/patient-clinical-sections"
 import { FormLabel } from "@/components/form-label"
 
 export default async function PatientDetailPage({
@@ -14,25 +16,29 @@ export default async function PatientDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ updated?: string }>
+  searchParams: Promise<{ updated?: string; added?: string }>
 }) {
   await requireAuth()
   const { id } = await params
-  const { updated } = await searchParams
+  const { updated, added } = await searchParams
   const supabase = await createSupabaseServerClient()
 
-  const [{ data: patient }, { data: appointments }, { data: invoices }] = await Promise.all([
+  const [
+    { data: patient },
+    { data: appointments },
+    { count: oralExamCount },
+    { count: treatmentPlanCount },
+    { count: workDoneCount },
+  ] = await Promise.all([
     supabase.from("patients").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("appointments")
       .select("id, appointment_date, appointment_time, status, treatment")
       .eq("patient_id", id)
       .order("appointment_date", { ascending: false }),
-    supabase
-      .from("invoices")
-      .select("id, amount, status, invoice_date")
-      .eq("patient_id", id)
-      .order("invoice_date", { ascending: false }),
+    supabase.from("oral_examinations").select("id", { count: "exact", head: true }).eq("patient_id", id),
+    supabase.from("treatment_plans").select("id", { count: "exact", head: true }).eq("patient_id", id),
+    supabase.from("work_done").select("id", { count: "exact", head: true }).eq("patient_id", id),
   ])
 
   if (!patient) {
@@ -50,6 +56,20 @@ export default async function PatientDetailPage({
             : updated === "clinical"
               ? "Clinical information updated successfully."
               : "Updated successfully."}
+        </p>
+      ) : null}
+
+      {added ? (
+        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+          {added === "exam"
+            ? "Oral examination saved."
+            : added === "plan"
+              ? "Treatment plan saved."
+              : added === "work"
+                ? "Work done recorded."
+                : added === "invoice"
+                  ? "Invoice created."
+                  : "Record saved."}
         </p>
       ) : null}
 
@@ -73,6 +93,15 @@ export default async function PatientDetailPage({
           </button>
         </form>
       </header>
+
+      <PatientModuleNav
+        patientId={patient.id}
+        counts={{
+          oralExams: oralExamCount ?? 0,
+          treatmentPlans: treatmentPlanCount ?? 0,
+          workDone: workDoneCount ?? 0,
+        }}
+      />
 
       <form action={updatePatientDetailsAction} className="rounded-lg border bg-white p-5">
         <h2 className="text-lg font-semibold">Patient details</h2>
@@ -157,35 +186,25 @@ export default async function PatientDetailPage({
         </button>
       </form>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <article className="rounded-lg border bg-white p-5">
-          <h2 className="text-lg font-semibold">Appointments</h2>
-          <ul className="mt-3 space-y-2 text-sm">
-            {appointments?.map((item) => (
+      <PatientClinicalSections patientId={patient.id} />
+
+      <article className="rounded-lg border bg-white p-5">
+        <h2 className="text-lg font-semibold">Appointments</h2>
+        <ul className="mt-3 space-y-2 text-sm">
+          {appointments?.length ? (
+            appointments.map((item) => (
               <li key={item.id} className="rounded border p-3">
                 <p>
                   {item.appointment_date} at {item.appointment_time}
                 </p>
                 <p className="text-muted-foreground">{item.status}</p>
               </li>
-            ))}
-          </ul>
-        </article>
-
-        <article className="rounded-lg border bg-white p-5">
-          <h2 className="text-lg font-semibold">Invoices</h2>
-          <ul className="mt-3 space-y-2 text-sm">
-            {invoices?.map((item) => (
-              <li key={item.id} className="rounded border p-3">
-                <p>Rs. {Number(item.amount).toFixed(2)}</p>
-                <p className="text-muted-foreground">
-                  {item.status} - {item.invoice_date}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </article>
-      </div>
+            ))
+          ) : (
+            <li className="rounded border p-3 text-muted-foreground">No appointments yet.</li>
+          )}
+        </ul>
+      </article>
     </section>
   )
 }
