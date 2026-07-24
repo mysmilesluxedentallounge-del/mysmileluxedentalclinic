@@ -11,10 +11,11 @@ import {
   dashboardTableEmptyRowClass,
   dashboardTableHeadClass,
   dashboardTableThClass,
-  dashboardTableWrapperClass,
+  dashboardTableWrapperScrollClass,
 } from "@/lib/dashboard-table"
 import { deletePatientAction } from "@/lib/dashboard-actions"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import ClickableRow from "@/components/dashboard/clickable-row"
 
 type PatientSearchParams = {
   q?: string
@@ -110,7 +111,7 @@ export default async function PatientsPage({
         </div>
       </form>
 
-      <div className={dashboardTableWrapperClass}>
+      <div className={dashboardTableWrapperScrollClass}>
         <table className={dashboardTableClass}>
           <thead className={dashboardTableHeadClass}>
             <tr>
@@ -124,7 +125,7 @@ export default async function PatientsPage({
           </thead>
           <tbody>
             {paginatedPatients.map((patient, index) => (
-              <tr key={patient.id} className={dashboardTableBodyRowClass(index)}>
+              <ClickableRow key={patient.id} href={`/dashboard/patients/${patient.id}`} className={dashboardTableBodyRowClass(index)}>
                 <td className="px-4 py-2">{startIndex + index + 1}</td>
                 <td className="px-4 py-2">{patient.full_name}</td>
                 <td className="px-4 py-2">{patient.phone || "-"}</td>
@@ -133,12 +134,13 @@ export default async function PatientsPage({
                 <td className="px-4 py-2">
                   <div className="flex flex-wrap items-center gap-3">
                     <Link
-                      href={`/dashboard/patients/${patient.id}/view`}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 text-slate-700 hover:bg-slate-100"
-                      title="View"
-                      aria-label="View patient"
+                      href={`/dashboard/patients/${patient.id}/overview`}
+                      className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-[var(--yellow-mid)] bg-[var(--yellow-lightest)] px-2.5 text-xs font-semibold text-[var(--brand-dark)] hover:bg-[var(--yellow-light)]"
+                      title="Open patient dashboard"
+                      aria-label="Open patient dashboard"
                     >
                       <Eye className="size-3.5 shrink-0" aria-hidden />
+                      Dashboard
                     </Link>
                     <Link
                       href={`/dashboard/patients/${patient.id}`}
@@ -161,7 +163,7 @@ export default async function PatientsPage({
                     </form>
                   </div>
                 </td>
-              </tr>
+              </ClickableRow>
             ))}
             {filteredPatients.length === 0 ? (
               <tr className={dashboardTableEmptyRowClass}>

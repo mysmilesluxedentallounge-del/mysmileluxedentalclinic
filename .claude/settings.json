@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(npx tsc --noEmit -p tsconfig.json 2>&1)",
+      "PowerShell(node ./node_modules/typescript/bin/tsc --noEmit -p tsconfig.json 2>&1)",
+      "PowerShell(npm install --no-audit --no-fund 2>&1)",
+      "PowerShell(npx next lint --dir app --dir lib --dir components 2>&1)",
+      "PowerShell(npx eslint lib components \"app/dashboard\" 2>&1)",
+      "PowerShell($env:NEXT_PUBLIC_SUPABASE_URL=\"https://placeholder.supabase.co\"; $env:NEXT_PUBLIC_SUPABASE_ANON_KEY=\"placeholder-anon-key\"; npm run build 2>&1 | Select-Object -Last 60)",
+      "PowerShell(\"---TSC DONE \\(empty above = clean\\)---\")",
+      "PowerShell(npm run lint 2>&1 | Select-Object -Last 15; \"=== BUILD ===\"; $env:NEXT_PUBLIC_SUPABASE_URL=\"https://placeholder.supabase.co\"; $env:NEXT_PUBLIC_SUPABASE_ANON_KEY=\"placeholder\"; npm run build 2>&1 | Select-String -Pattern \"error|Error|warn|Warning|Compiled|Failed|✓|✗\" | Select-Object -First 40)",
+      "PowerShell([System.GC]::Collect\\(\\); Start-Sleep -Seconds 5; $env:NEXT_PUBLIC_SUPABASE_URL=\"https://placeholder.supabase.co\"; $env:NEXT_PUBLIC_SUPABASE_ANON_KEY=\"placeholder\"; $env:NODE_OPTIONS=\"--max-old-space-size=2048\"; npm run build 2>&1 | Select-String -Pattern \"Compiled|Failed|error occurred|Generating static|Route \\\\\\(app\\\\\\)|paging|Turbopack\" | Select-Object -First 20)",
+      "PowerShell(Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.Id -ne $PID } | Sort-Object WorkingSet -Descending | Select-Object Id, @{N='MB';E={[int]\\($_.WorkingSet/1MB\\)}} | Format-Table -AutoSize; \"--- Free memory \\(MB\\): ---\"; [int]\\(\\(Get-CimInstance Win32_OperatingSystem\\).FreePhysicalMemory/1024\\))",
+      "PowerShell(Remove-Item Env:\\\\NODE_OPTIONS -ErrorAction SilentlyContinue; [System.GC]::Collect\\(\\); Start-Sleep -Seconds 8; $env:NEXT_PUBLIC_SUPABASE_URL=\"https://placeholder.supabase.co\"; $env:NEXT_PUBLIC_SUPABASE_ANON_KEY=\"placeholder\"; npm run build 2>&1 | Select-String -Pattern \"Compiled successfully|Failed to compile|Route \\\\\\(app\\\\\\)|out of memory|paging|oral-exams|treatment-plan|work-done|treatments\" | Select-Object -First 30)",
+      "PowerShell($url=\"https://cmkwvxcqnphaqjdvigeu.supabase.co\"; $anon=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNta3d2eGNxbnBoYXFqZHZpZ2V1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMTQ3MDEsImV4cCI6MjA5MjU5MDcwMX0.1bOxoIxNeySzxP2F2oDuuG_I882mjUuuINrh7a1L7l0\"; try { $r = Invoke-WebRequest -Uri \"$url/rest/v1/\" -Headers @{ apikey = $anon } -UseBasicParsing -TimeoutSec 20; \"HTTP \" + $r.StatusCode + \" - Supabase project is reachable and key is valid.\" } catch { \"Status: \" + $_.Exception.Response.StatusCode.value__ + \" - \" + $_.Exception.Message })",
+      "PowerShell($url=\"https://cmkwvxcqnphaqjdvigeu.supabase.co\"; $anon=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNta3d2eGNxbnBoYXFqZHZpZ2V1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMTQ3MDEsImV4cCI6MjA5MjU5MDcwMX0.1bOxoIxNeySzxP2F2oDuuG_I882mjUuuINrh7a1L7l0\"; try { $r = Invoke-WebRequest -Uri \"$url/rest/v1/\" -Headers @{ apikey = $anon; Authorization = \"Bearer $anon\" } -UseBasicParsing -TimeoutSec 20; \"HTTP \" + $r.StatusCode + \" - connected. Body length: \" + $r.Content.Length } catch { $resp = $_.Exception.Response; if \\($resp\\) { $sr = New-Object System.IO.StreamReader\\($resp.GetResponseStream\\(\\)\\); $body = $sr.ReadToEnd\\(\\); \"Status: \" + $resp.StatusCode.value__ + \" Body: \" + $body } else { \"No response: \" + $_.Exception.Message } })",
+      "PowerShell(npm run setup:supabase 2>&1)",
+      "PowerShell(if \\($LASTEXITCODE -eq 0\\) { \"TYPECHECK CLEAN\" } else { \"TYPECHECK FAILED\" })",
+      "PowerShell(npx eslint \"app/dashboard/patients/[id]/oral-exams\" \"components/dental\" \"lib/dental-charting.ts\" 2>&1)",
+      "PowerShell(if \\($LASTEXITCODE -eq 0\\) { \"LINT CLEAN\" } else { \"LINT HAD ISSUES\" })",
+      "PowerShell(npx eslint \"app/dashboard/patients/[id]/treatment-plan\" 2>&1)",
+      "PowerShell(\"--- lint ---\")",
+      "PowerShell(if \\($LASTEXITCODE -eq 0\\) { \"LINT CLEAN\" } else { \"LINT ISSUES\" })",
+      "PowerShell(npx next dev --help 2>&1)",
+      "PowerShell(npx eslint \"app/dashboard\" \"components\" 2>&1)",
+      "PowerShell(npx eslint \"app/dashboard/patients\" \"components\" 2>&1)",
+      "PowerShell(npx eslint \"app\" \"lib\" \"components\" 2>&1)"
+    ]
+  }
+}

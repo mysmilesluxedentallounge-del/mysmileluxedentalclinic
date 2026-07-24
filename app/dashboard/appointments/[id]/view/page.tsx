@@ -64,7 +64,7 @@ export default async function AppointmentViewPage({
         <fieldset disabled className="grid gap-3 md:grid-cols-2 disabled:opacity-100">
           <label className="space-y-1">
             <span className="block text-sm font-medium text-slate-700">Patient</span>
-            <select value={appointment.patient_id} className="w-full rounded-md border px-3 py-2 text-sm">
+            <select defaultValue={appointment.patient_id} className="w-full rounded-md border px-3 py-2 text-sm">
               <option value="">Select patient</option>
               {patients?.map((patient) => (
                 <option key={patient.id} value={patient.id}>
@@ -76,7 +76,7 @@ export default async function AppointmentViewPage({
 
           <label className="space-y-1">
             <span className="block text-sm font-medium text-slate-700">Doctor</span>
-            <select value={appointment.doctor_id} className="w-full rounded-md border px-3 py-2 text-sm">
+            <select defaultValue={appointment.doctor_id} className="w-full rounded-md border px-3 py-2 text-sm">
               <option value="">Select doctor</option>
               {doctors?.map((doctor) => (
                 <option key={doctor.id} value={doctor.id}>
@@ -88,12 +88,12 @@ export default async function AppointmentViewPage({
 
           <label className="space-y-1">
             <span className="block text-sm font-medium text-slate-700">Appointment date</span>
-            <input type="date" value={appointment.appointment_date} className="w-full rounded-md border px-3 py-2 text-sm" />
+            <input type="date" defaultValue={appointment.appointment_date} readOnly className="w-full rounded-md border px-3 py-2 text-sm" />
           </label>
 
           <label className="space-y-1">
             <span className="block text-sm font-medium text-slate-700">Appointment time</span>
-            <select value={appointment.appointment_time?.slice(0, 5)} className="w-full rounded-md border px-3 py-2 text-sm">
+            <select defaultValue={appointment.appointment_time?.slice(0, 5)} className="w-full rounded-md border px-3 py-2 text-sm">
               <option value="">Select time slot</option>
               {BOOKING_TIME_SLOTS.map((slot) => (
                 <option key={slot.value} value={slot.value}>
@@ -121,7 +121,7 @@ export default async function AppointmentViewPage({
 
           <label className="space-y-1">
             <span className="block text-sm font-medium text-slate-700">Status</span>
-            <select value={appointment.status} className="w-full rounded-md border px-3 py-2 text-sm">
+            <select defaultValue={appointment.status} className="w-full rounded-md border px-3 py-2 text-sm">
               <option value="scheduled">Scheduled</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
@@ -130,7 +130,7 @@ export default async function AppointmentViewPage({
 
           <label className="space-y-1 md:col-span-2">
             <span className="block text-sm font-medium text-slate-700">Notes</span>
-            <textarea value={appointment.notes ?? ""} placeholder="Notes" className="w-full rounded-md border px-3 py-2 text-sm" />
+            <textarea defaultValue={appointment.notes ?? ""} readOnly placeholder="Notes" className="w-full rounded-md border px-3 py-2 text-sm" />
           </label>
         </fieldset>
       </section>

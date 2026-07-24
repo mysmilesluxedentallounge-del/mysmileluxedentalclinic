@@ -13,22 +13,24 @@ export type InvoiceRecord = {
   upi_transaction_id: string | null
   include_treatment_date: boolean | null
   notes: string | null
+  created_at: string | null
 }
 
 const INVOICE_SELECT_FULL =
-  "id, patient_id, appointment_id, amount, status, invoice_date, payment_method, upi_transaction_id, include_treatment_date, notes"
+  "id, patient_id, appointment_id, amount, status, invoice_date, payment_method, upi_transaction_id, include_treatment_date, notes, created_at"
 
 const INVOICE_SELECT_BASE =
-  "id, patient_id, appointment_id, amount, status, invoice_date, payment_method, notes"
+  "id, patient_id, appointment_id, amount, status, invoice_date, payment_method, notes, created_at"
 
 function withInvoiceDefaults(
-  row: Omit<InvoiceRecord, "upi_transaction_id" | "include_treatment_date"> &
-    Partial<Pick<InvoiceRecord, "upi_transaction_id" | "include_treatment_date">>
+  row: Omit<InvoiceRecord, "upi_transaction_id" | "include_treatment_date" | "created_at"> &
+    Partial<Pick<InvoiceRecord, "upi_transaction_id" | "include_treatment_date" | "created_at">>
 ): InvoiceRecord {
   return {
     ...row,
     upi_transaction_id: row.upi_transaction_id ?? null,
     include_treatment_date: row.include_treatment_date ?? true,
+    created_at: row.created_at ?? null,
   }
 }
 

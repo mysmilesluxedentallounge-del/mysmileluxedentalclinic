@@ -11,10 +11,11 @@ import {
   dashboardTableClass,
   dashboardTableHeadClass,
   dashboardTableThClass,
-  dashboardTableWrapperClass,
+  dashboardTableWrapperScrollClass,
 } from "@/lib/dashboard-table"
 import { deleteInvoiceAction } from "@/lib/dashboard-actions"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import ClickableRow from "@/components/dashboard/clickable-row"
 import DownloadInvoiceButton from "./download-invoice-button"
 
 type InvoiceRow = {
@@ -105,7 +106,7 @@ export default async function BillingPage({
         </article>
       </div>
 
-      <div className={dashboardTableWrapperClass}>
+      <div className={dashboardTableWrapperScrollClass}>
         <table className={dashboardTableClass}>
           <thead className={dashboardTableHeadClass}>
             <tr>
@@ -120,7 +121,7 @@ export default async function BillingPage({
           </thead>
           <tbody>
             {paginatedInvoices.map((invoice, index) => (
-              <tr key={invoice.id} className={dashboardTableBodyRowClass(index)}>
+              <ClickableRow key={invoice.id} href={`/dashboard/billing/${invoice.id}`} className={dashboardTableBodyRowClass(index)}>
                 <td className="px-4 py-2">{startIndex + index + 1}</td>
                 <td className="px-4 py-2">{invoice.invoice_date}</td>
                 <td className="px-4 py-2">{invoice.patients?.full_name || "-"}</td>
@@ -144,7 +145,7 @@ export default async function BillingPage({
                     </form>
                   </div>
                 </td>
-              </tr>
+              </ClickableRow>
             ))}
           </tbody>
         </table>

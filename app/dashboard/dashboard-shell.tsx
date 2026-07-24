@@ -8,6 +8,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  ClipboardList,
   FileText,
   LayoutDashboard,
   PiggyBank,
@@ -172,6 +173,15 @@ export default function DashboardShell({ children, profile }: DashboardShellProp
                 {!isCollapsed ? "Doctors" : null}
               </Link>
               <Link
+                className={sidebarLinkClasses(isNavActive(pathname, "/dashboard/treatments"), isCollapsed)}
+                href="/dashboard/treatments"
+                title="Treatments"
+                aria-current={isNavActive(pathname, "/dashboard/treatments") ? "page" : undefined}
+              >
+                <ClipboardList size={navIconSize} />
+                {!isCollapsed ? "Treatments" : null}
+              </Link>
+              <Link
                 className={sidebarLinkClasses(isNavActive(pathname, "/dashboard/budget"), isCollapsed)}
                 href="/dashboard/budget"
                 title="Budget"
@@ -261,6 +271,13 @@ export default function DashboardShell({ children, profile }: DashboardShellProp
                           aria-current={isNavActive(pathname, "/dashboard/doctors") ? "page" : undefined}
                         >
                           Doctors
+                        </Link>
+                        <Link
+                          className={mobileLinkClasses(isNavActive(pathname, "/dashboard/treatments"))}
+                          href="/dashboard/treatments"
+                          aria-current={isNavActive(pathname, "/dashboard/treatments") ? "page" : undefined}
+                        >
+                          Treatments
                         </Link>
                         <Link
                           className={mobileLinkClasses(isNavActive(pathname, "/dashboard/budget"))}

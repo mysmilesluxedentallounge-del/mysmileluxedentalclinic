@@ -11,10 +11,11 @@ import {
   dashboardTableEmptyRowClass,
   dashboardTableHeadClass,
   dashboardTableThClass,
-  dashboardTableWrapperClass,
+  dashboardTableWrapperScrollClass,
 } from "@/lib/dashboard-table"
 import { deleteAppointmentAction, updateAppointmentStatusAction } from "@/lib/dashboard-actions"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import ClickableRow from "@/components/dashboard/clickable-row"
 
 type AppointmentRow = {
   id: string
@@ -138,7 +139,7 @@ export default async function AppointmentsPage({
         </div>
       </form>
 
-      <div className={dashboardTableWrapperClass}>
+      <div className={dashboardTableWrapperScrollClass}>
         <table className={dashboardTableClass}>
           <thead className={dashboardTableHeadClass}>
             <tr>
@@ -153,7 +154,7 @@ export default async function AppointmentsPage({
           </thead>
           <tbody>
             {paginatedAppointments.map((appointment, index) => (
-              <tr key={appointment.id} className={dashboardTableBodyRowClass(index)}>
+              <ClickableRow key={appointment.id} href={`/dashboard/appointments/${appointment.id}`} className={dashboardTableBodyRowClass(index)}>
                 <td className="px-4 py-2">{startIndex + index + 1}</td>
                 <td className="px-4 py-2">
                   {appointment.appointment_date} {appointment.appointment_time}
@@ -213,7 +214,7 @@ export default async function AppointmentsPage({
                     </form>
                   </div>
                 </td>
-              </tr>
+              </ClickableRow>
             ))}
             {filteredAppointments.length === 0 ? (
               <tr className={dashboardTableEmptyRowClass}>

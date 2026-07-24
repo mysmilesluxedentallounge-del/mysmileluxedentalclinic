@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { Plus, Trash2 } from "lucide-react"
 import { FormLabel } from "@/components/form-label"
 
+/** Shape passed in by callers (net payable stored in `offer_amount`, as in the DB). */
 type InvoiceItemInput = {
   treatment_name: string
   treatment_date: string
@@ -11,33 +12,81 @@ type InvoiceItemInput = {
   offer_amount: string
 }
 
-function normalizeInitialItems(items: InvoiceItemInput[]) {
-  if (items.length > 0) return items
-  return [{ treatment_name: "", treatment_date: "", cost: "", offer_amount: "" }]
+/** Internal editing state: user enters a discount PERCENTAGE; net is derived. */
+type ItemState = {
+  treatment_name: string
+  treatment_date: string
+  cost: string
+  /** Discount as a percentage (0-100). */
+  discount: string
 }
 
-function lineAmount(item: InvoiceItemInput) {
-  const offer = item.offer_amount.trim()
-  if (offer !== "") {
-    const offerValue = Number(offer)
-    if (!Number.isNaN(offerValue) && offerValue >= 0) return offerValue
+function toState(item: InvoiceItemInput): ItemState {
+  const cost = Number(item.cost)
+  const offer = item.offer_amount.trim() === "" ? null : Number(item.offer_amount)
+  let discount = ""
+  if (offer !== null && !Number.isNaN(offer) && !Number.isNaN(cost) && cost > 0 && offer <= cost) {
+    const percent = ((cost - offer) / cost) * 100
+    if (percent > 0) discount = String(Number(percent.toFixed(2)))
   }
-  const costValue = Number(item.cost)
-  if (!Number.isNaN(costValue) && costValue >= 0) return costValue
-  return 0
+  return { treatment_name: item.treatment_name, treatment_date: item.treatment_date, cost: item.cost, discount }
 }
 
-export function InvoiceItemsFields({ initialItems = [] }: { initialItems?: InvoiceItemInput[] }) {
-  const [items, setItems] = useState<InvoiceItemInput[]>(normalizeInitialItems(initialItems))
+/** Discount percentage clamped to 0-100. */
+function discountPercent(item: ItemState): number {
+  const percent = item.discount.trim() === "" ? 0 : Number(item.discount)
+  if (Number.isNaN(percent) || percent <= 0) return 0
+  return Math.min(percent, 100)
+}
 
-  const total = useMemo(() => items.reduce((sum, item) => sum + lineAmount(item), 0), [items])
+function normalizeInitialItems(items: InvoiceItemInput[]): ItemState[] {
+  const mapped = items.map(toState)
+  if (mapped.length > 0) return mapped
+  return [{ treatment_name: "", treatment_date: "", cost: "", discount: "" }]
+}
 
-  function updateItem(index: number, field: keyof InvoiceItemInput, value: string) {
+function netAmount(item: ItemState): number {
+  const cost = Number(item.cost)
+  if (Number.isNaN(cost) || cost < 0) return 0
+  const percent = discountPercent(item)
+  if (percent <= 0) return cost
+  return Math.max(0, cost - (cost * percent) / 100)
+}
+
+/** Hidden `item_offer_amount` = net payable when a discount applies, else empty (no offer). */
+function offerValue(item: ItemState): string {
+  const cost = Number(item.cost)
+  if (Number.isNaN(cost) || cost < 0) return ""
+  const percent = discountPercent(item)
+  if (percent <= 0) return ""
+  return String(Number(Math.max(0, cost - (cost * percent) / 100).toFixed(2)))
+}
+
+function formatCurrency(value: number) {
+  return `INR ${new Intl.NumberFormat("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)}`
+}
+
+export function InvoiceItemsFields({
+  initialItems = [],
+  compact = false,
+}: {
+  initialItems?: InvoiceItemInput[]
+  /** Stack fields vertically for narrow containers (e.g. dashboard cards). */
+  compact?: boolean
+}) {
+  const [items, setItems] = useState<ItemState[]>(normalizeInitialItems(initialItems))
+  const rowClass = compact
+    ? "grid gap-2 sm:grid-cols-2"
+    : "grid gap-2 md:grid-cols-[1fr_140px_120px_120px_120px_auto]"
+
+  const total = useMemo(() => items.reduce((sum, item) => sum + netAmount(item), 0), [items])
+
+  function updateItem(index: number, field: keyof ItemState, value: string) {
     setItems((prev) => prev.map((item, itemIndex) => (itemIndex === index ? { ...item, [field]: value } : item)))
   }
 
   function addItem() {
-    setItems((prev) => [...prev, { treatment_name: "", treatment_date: "", cost: "", offer_amount: "" }])
+    setItems((prev) => [...prev, { treatment_name: "", treatment_date: "", cost: "", discount: "" }])
   }
 
   function removeItem(index: number) {
@@ -63,7 +112,7 @@ export function InvoiceItemsFields({ initialItems = [] }: { initialItems?: Invoi
 
       <div className="space-y-2">
         {items.map((item, index) => (
-          <div key={`item-row-${index}`} className="grid gap-2 md:grid-cols-[1fr_140px_120px_120px_auto]">
+          <div key={`item-row-${index}`} className={`${rowClass} ${compact ? "rounded-md border border-slate-200 bg-white p-2" : ""}`}>
             <label className="space-y-1">
               <FormLabel required className="block text-xs font-medium text-slate-600">
                 Treatment name
@@ -104,23 +153,34 @@ export function InvoiceItemsFields({ initialItems = [] }: { initialItems?: Invoi
               />
             </label>
             <label className="space-y-1">
-              <span className="block text-xs font-medium text-slate-600">Offer amount</span>
+              <span className="block text-xs font-medium text-slate-600">Discount (%)</span>
               <input
-                name="item_offer_amount"
                 type="number"
                 min="0"
+                max="100"
                 step="0.01"
-                value={item.offer_amount}
-                onChange={(event) => updateItem(index, "offer_amount", event.target.value)}
-                placeholder="Optional"
+                value={item.discount}
+                onChange={(event) => updateItem(index, "discount", event.target.value)}
+                placeholder="0"
                 className="w-full rounded-md border px-3 py-2 text-sm"
               />
             </label>
+            <label className="space-y-1">
+              <span className="block text-xs font-medium text-slate-600">Payable</span>
+              <input
+                value={new Intl.NumberFormat("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(netAmount(item))}
+                readOnly
+                tabIndex={-1}
+                className="w-full rounded-md border bg-slate-50 px-3 py-2 text-sm text-slate-600"
+              />
+            </label>
+            {/* Net payable persisted as offer_amount so invoices/receipts reflect the discount. */}
+            <input type="hidden" name="item_offer_amount" value={offerValue(item)} readOnly />
             <button
               type="button"
               onClick={() => removeItem(index)}
               disabled={items.length <= 1}
-              className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex cursor-pointer items-center justify-center gap-1.5 self-end rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Trash2 className="size-3.5 shrink-0" aria-hidden />
               Remove
@@ -130,10 +190,10 @@ export function InvoiceItemsFields({ initialItems = [] }: { initialItems?: Invoi
       </div>
 
       <div className="rounded-md border bg-slate-50 px-3 py-2 text-sm">
-        <span className="font-medium">Total: </span>
-        INR {new Intl.NumberFormat("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(total)}
+        <span className="font-medium">Total payable: </span>
+        {formatCurrency(total)}
         <span className="mt-1 block text-xs text-slate-500">
-          Uses offer amount when set; otherwise uses the normal amount. Zero rupees is allowed.
+          Payable = Amount − (Amount × Discount%). e.g. 120 with 50% → 60. Zero rupees is allowed.
         </span>
       </div>
     </div>
