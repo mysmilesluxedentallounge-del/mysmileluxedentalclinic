@@ -42,6 +42,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // If the server can't reach Supabase with admin rights, the appointment can
+  // never be saved — fail loudly with a clear message instead of a silent 401.
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error(
+      "send-appointment: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing on the server — appointment was NOT saved."
+    );
+    return NextResponse.json(
+      { error: "Booking service is not configured on the server (missing Supabase credentials). Please contact the clinic by phone." },
+      { status: 503 }
+    );
+  }
+
   const formattedDate = date
     ? new Date(date).toLocaleDateString("en-IN", {
         weekday: "long",
@@ -139,6 +151,7 @@ export async function POST(req: NextRequest) {
       throw new Error(appointmentError.message);
     }
   } catch (error) {
+    console.error("send-appointment booking error:", error);
     bookingError = error instanceof Error ? error.message : "Could not create patient and appointment.";
   }
 

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
+import { buildHomeJsonLd, jsonLdScript } from "@/lib/site-seo";
+import Analytics from "@/components/analytics";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -103,51 +105,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Dentist",
-    name: "MySmile Luxe Dental Lounge",
-    description:
-      "Luxury dental clinic in SLN Terminus Mall, Gachibowli, Hyderabad. Specialising in painless dentistry, smile designing, root canals, implants and cosmetic dentistry.",
-    image: "https://mysmileluxedentallounge.com/mainlogo.png",
-    url: "https://mysmileluxedentallounge.com",
-    telephone: "+916304693676",
-    email: "mysmileluxedentallounge@gmail.com",
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: "Level 2, SLN Terminus Mall",
-      addressLocality: "Gachibowli",
-      addressRegion: "Telangana",
-      postalCode: "500032",
-      addressCountry: "IN",
-    },
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: 17.4436,
-      longitude: 78.3605,
-    },
-    openingHoursSpecification: [
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-        opens: "09:00",
-        closes: "20:00",
-      },
-    ],
-    priceRange: "₹₹₹",
-    hasMap: "https://maps.app.goo.gl/MuapBb1Awx99nP3U8",
-    sameAs: [
-      "https://www.instagram.com/mysmileluxdentallounge",
-      "https://www.linkedin.com/in/dr-shridha-prabhu/",
-    ],
-    medicalSpecialty: [
-      "Cosmetic Dentistry",
-      "Endodontics",
-      "Implantology",
-      "Laser Dentistry",
-    ],
-  };
-
   return (
     <html
       lang="en"
@@ -156,10 +113,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-inter">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
-          }}
+          dangerouslySetInnerHTML={{ __html: jsonLdScript(buildHomeJsonLd()) }}
         />
+        <Analytics />
         {children}
       </body>
     </html>
