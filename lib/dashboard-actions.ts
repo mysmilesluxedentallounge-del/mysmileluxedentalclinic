@@ -248,9 +248,8 @@ export async function deletePatientAction(formData: FormData) {
   revalidatePath("/dashboard/patients")
   revalidatePath("/dashboard/appointments")
   revalidatePath("/dashboard/billing")
-  if (redirectTo) {
-    redirect(redirectTo)
-  }
+  // Always redirect away from the (now-deleted) record so we never land on a 404.
+  redirect(redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/dashboard/patients")
 }
 
 export async function createAppointmentAction(formData: FormData) {
@@ -396,9 +395,7 @@ export async function deleteAppointmentAction(formData: FormData) {
   revalidatePath("/dashboard/appointments")
   revalidatePath("/dashboard/patients")
   revalidatePath("/dashboard/billing")
-  if (redirectTo) {
-    redirect(redirectTo)
-  }
+  redirect(redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/dashboard/appointments")
 }
 
 export async function createInvoiceAction(formData: FormData) {
@@ -583,9 +580,7 @@ export async function deleteInvoiceAction(formData: FormData) {
   revalidatePath("/dashboard")
   revalidatePath("/dashboard/billing")
   revalidatePath("/dashboard/patients")
-  if (redirectTo) {
-    redirect(redirectTo)
-  }
+  redirect(redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/dashboard/billing")
 }
 
 export async function createStaffUserAction(formData: FormData) {
