@@ -16,6 +16,7 @@ import {
 import { deleteAppointmentAction, updateAppointmentStatusAction } from "@/lib/dashboard-actions"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import ClickableRow from "@/components/dashboard/clickable-row"
+import RealtimeRefresh from "@/components/dashboard/realtime-refresh"
 
 type AppointmentRow = {
   id: string
@@ -85,6 +86,7 @@ export default async function AppointmentsPage({
 
   return (
     <section className="space-y-6">
+      <RealtimeRefresh tables={["appointments", "patients"]} />
       {added ? (
         <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
           Appointment added successfully.

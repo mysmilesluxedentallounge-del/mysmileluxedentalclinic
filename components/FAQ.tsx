@@ -2,39 +2,9 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { HOME_FAQS } from "@/lib/site-seo";
 
-const faqs = [
-  {
-    question: "What are the signs that I might need a root canal?",
-    answer:
-      "Signs you might need a root canal include severe tooth pain, prolonged tooth sensitivity to hot or cold, gum swelling, darkening of the tooth, and tenderness when chewing.",
-  },
-  {
-    question: "What is the process for getting dental implants at MySmile?",
-    answer:
-      "At MySmile, getting dental implants involves a consultation, implant placement, a healing period for bone integration, and then fitting the abutment and crown.",
-  },
-  {
-    question: "Can I get invisible aligners at MySmile?",
-    answer:
-      "Yes, MySmile offers invisible aligners across various leading brands, tailored to your teeth alignment needs and lifestyle. Our team will assess your case and recommend the best option for you.",
-  },
-  {
-    question: "What types of braces does MySmile offer?",
-    answer:
-      "MySmile offers various types of braces including traditional metal braces, ceramic braces (tooth-colored) & clear aligners like Invisalign, tailored to individual needs.",
-  },
-  {
-    question: "What safety measures are in place at MySmile?",
-    answer:
-      "At MySmile, we follow stringent safety protocols including radiation safety and a multi-step sterilization process for all instruments, ensuring a safe and hygienic environment for every patient.",
-  },
-  {
-    question: "How do I cancel or reschedule my appointment?",
-    answer:
-      "To cancel or reschedule your appointment, contact our clinic directly at +91 6304693676 or reach us via email at mysmileluxedentallounge@gmail.com. Our team will be happy to assist you.",
-  },
-];
+const faqs = HOME_FAQS;
 
 export default function FAQ() {
   const [open, setOpen] = useState<number | null>(null);

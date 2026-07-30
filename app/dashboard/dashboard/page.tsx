@@ -1,5 +1,6 @@
 import { requireAuth } from "@/lib/auth"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import RealtimeRefresh from "@/components/dashboard/realtime-refresh"
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-IN", {
@@ -96,6 +97,7 @@ export default async function DashboardPage() {
 
   return (
     <section className="space-y-6">
+      <RealtimeRefresh tables={["appointments", "patients", "invoices"]} />
       <header>
         <h1 className="font-heading text-3xl text-slate-900">Dashboard</h1>
         <p className="mt-2 text-sm text-muted-foreground">Insights across patients, appointments, and collections.</p>

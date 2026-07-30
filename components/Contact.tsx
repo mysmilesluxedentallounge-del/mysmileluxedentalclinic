@@ -289,7 +289,7 @@ export default function Contact() {
                   label: "Clinic Address",
                   value:
                     "Level 2, SLN Terminus Mall, Gachibowli, Hyderabad 500032",
-                  href: "https://maps.google.com/?q=SLN+Terminus+Mall+Gachibowli+Hyderabad",
+                  href: "https://maps.app.goo.gl/MuapBb1Awx99nP3U8",
                 },
               ].map((item) => {
                 const Icon = item.icon;
@@ -332,11 +332,11 @@ export default function Contact() {
               })}
             </div>
 
-            {/* Map embed placeholder */}
+            {/* Google Maps embed — resolves to the clinic's Business Profile listing (MEO). */}
             <div className="rounded-2xl overflow-hidden border border-gray-200 h-75 bg-gray-100 flex items-center justify-center">
               <iframe
-                title="MySmile Lux Dental Lounge Location"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3807.2537090026893!2d78.36050!3d17.44360!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb93e7ad8c3a1b%3A0x1a2b3c4d5e6f7a8b!2sSLN+Terminus+Mall%2C+Gachibowli!5e0!3m2!1sen!2sin!4v1234567890"
+                title="MySmile Luxe Dental Lounge — Gachibowli, Hyderabad"
+                src="https://maps.google.com/maps?q=MySmile%20Luxe%20Dental%20Lounge%2C%20SLN%20Terminus%20Mall%2C%20Gachibowli%2C%20Hyderabad&z=16&output=embed"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
@@ -345,6 +345,16 @@ export default function Contact() {
                 referrerPolicy="no-referrer-when-downgrade"
               />
             </div>
+            <a
+              href="https://maps.app.goo.gl/MuapBb1Awx99nP3U8"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-semibold"
+              style={{ color: "var(--brand-teal)" }}
+            >
+              <MapPin size={16} />
+              Get directions on Google Maps
+            </a>
           </div>
         </div>
       </div>

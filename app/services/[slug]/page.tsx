@@ -8,6 +8,7 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 import { services, getServiceBySlug } from "@/lib/services";
+import { jsonLdScript } from "@/lib/site-seo";
 
 export function generateStaticParams() {
   return services.map((s) => ({ slug: s.slug }));
@@ -93,14 +94,49 @@ export default async function ServicePage(
     },
   };
 
+  // FAQ + breadcrumb schema — strong AEO signal so answer engines can cite the page.
+  const faqLd = service.faqs.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: service.faqs.map((f) => ({
+          "@type": "Question",
+          name: f.q,
+          acceptedAnswer: { "@type": "Answer", text: f.a },
+        })),
+      }
+    : null;
+
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://mysmileluxedentallounge.com" },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: service.name,
+        item: `https://mysmileluxedentallounge.com/services/${service.slug}`,
+      },
+    ],
+  };
+
   return (
     <main className="min-h-screen" style={{ backgroundColor: "#faf9f6" }}>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
-        }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }}
+      />
+      {faqLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdScript(faqLd) }}
+        />
+      ) : null}
 
       {/* ── Top bar ── */}
       <header
