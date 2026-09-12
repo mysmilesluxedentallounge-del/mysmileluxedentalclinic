@@ -66,6 +66,46 @@ function extractUpiTxnIdFromNotes(notes: string | null | undefined) {
   return match?.[1]?.trim() ?? null
 }
 
+const SITE_URL = "https://mysmileluxedentallounge.com"
+
+const SIGNATURE_MAX_WIDTH = 130
+const SIGNATURE_MAX_HEIGHT = 46
+
+/**
+ * Read a file that lives in `public/`. Next.js serves that folder as static assets and does not
+ * trace it into the server bundle, so on a serverless deploy the local read can miss. Fall back to
+ * the copy hosted on the live site so the asset still renders in production.
+ */
+async function readPublicAsset(relativePath: string) {
+  try {
+    const fs = await import("fs/promises")
+    const path = await import("path")
+    return await fs.readFile(path.join(process.cwd(), "public", ...relativePath.split("/")))
+  } catch {
+    // not bundled with the function — fall through to the hosted copy
+  }
+
+  try {
+    const url = `${SITE_URL}/${relativePath.split("/").map(encodeURIComponent).join("/")}`
+    const response = await fetch(url, { cache: "no-store" })
+    if (!response.ok) return null
+    return Buffer.from(await response.arrayBuffer())
+  } catch {
+    return null
+  }
+}
+
+/** Fit the signature inside its box without stretching it out of proportion. */
+function drawScaledSignature(
+  page: ReturnType<PDFDocument["addPage"]>,
+  image: Parameters<ReturnType<PDFDocument["addPage"]>["drawImage"]>[0],
+  x: number,
+  y: number
+) {
+  const scale = Math.min(SIGNATURE_MAX_WIDTH / image.width, SIGNATURE_MAX_HEIGHT / image.height)
+  page.drawImage(image, { x, y, width: image.width * scale, height: image.height * scale })
+}
+
 async function drawDoctorSignature(
   pdfDoc: PDFDocument,
   page: ReturnType<PDFDocument["addPage"]>,
@@ -83,7 +123,7 @@ async function drawDoctorSignature(
       const base64 = signature.slice(commaIndex + 1)
       const bytes = Buffer.from(base64, "base64")
       const image = meta.includes("png") ? await pdfDoc.embedPng(bytes) : await pdfDoc.embedJpg(bytes)
-      page.drawImage(image, { x, y, width: 110, height: 42 })
+      drawScaledSignature(page, image, x, y)
       return true
     }
   } catch {
@@ -183,9 +223,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     })
     let logoDrawn = false
     try {
-      const logoResponse = await fetch("https://mysmileluxedentallounge.com/mainlogo.png", { cache: "no-store" })
-      if (logoResponse.ok) {
-        const logoBytes = await logoResponse.arrayBuffer()
+      const logoBytes = await readPublicAsset("mainlogo.png")
+      if (logoBytes) {
         const logoImage = await pdfDoc.embedPng(logoBytes)
         page.drawImage(logoImage, { x: 30, y: height - 98, width: 48, height: 48 })
         logoDrawn = true
@@ -538,23 +577,13 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     // Signature and seal drawn last so they always render on top of the treatment table.
     // Seal sits above, signature below it.
     try {
-      const fs = await import("fs/promises")
-      const path = await import("path")
-      const sealPath = path.join(process.cwd(), "public", "mysmileSeal.png")
-      const sealFileBytes = await fs.readFile(sealPath)
-      const sealImage = await pdfDoc.embedPng(sealFileBytes)
-      page.drawImage(sealImage, { x: 435, y: 132, width: 120, height: 120, rotate: degrees(10) })
-    } catch {
-      try {
-        const sealResponse = await fetch("https://mysmileluxedentallounge.com/mysmileSeal.png", { cache: "no-store" })
-        if (sealResponse.ok) {
-          const sealBytes = await sealResponse.arrayBuffer()
-          const sealImage = await pdfDoc.embedPng(sealBytes)
-          page.drawImage(sealImage, { x: 435, y: 132, width: 120, height: 120, rotate: degrees(10) })
-        }
-      } catch {
-        // seal unavailable — skip silently
+      const sealBytes = await readPublicAsset("mysmileSeal.png")
+      if (sealBytes) {
+        const sealImage = await pdfDoc.embedPng(sealBytes)
+        page.drawImage(sealImage, { x: 435, y: 132, width: 120, height: 120, rotate: degrees(10) })
       }
+    } catch {
+      // seal unavailable — skip silently
     }
 
     // Doctor signature — sits just above the seal.
@@ -565,22 +594,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
     if (!signatureDrawn) {
       try {
-        const fs = await import("fs/promises")
-        const path = await import("path")
-        const signaturePath = path.join(process.cwd(), "public", "doctors", "Signature", "Shridha_sign.png")
-        const signatureFileBytes = await fs.readFile(signaturePath)
-        const signatureImage = await pdfDoc.embedPng(signatureFileBytes)
-        // Preserve aspect ratio inside the signature area.
-        const maxWidth = 130
-        const maxHeight = 46
-        const scale = Math.min(maxWidth / signatureImage.width, maxHeight / signatureImage.height)
-        page.drawImage(signatureImage, {
-          x: signatureBoxX + 12,
-          y: signatureBoxY + 2,
-          width: signatureImage.width * scale,
-          height: signatureImage.height * scale,
-        })
-        signatureDrawn = true
+        const signatureFileBytes = await readPublicAsset("doctors/Signature/Shridha_Sign.png")
+        if (signatureFileBytes) {
+          const signatureImage = await pdfDoc.embedPng(signatureFileBytes)
+          drawScaledSignature(page, signatureImage, signatureBoxX + 12, signatureBoxY + 2)
+          signatureDrawn = true
+        }
       } catch {
         // bundled signature file unavailable — fall through to the placeholder box
       }
