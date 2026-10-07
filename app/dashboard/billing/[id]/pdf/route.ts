@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { PDFDocument, StandardFonts, degrees, rgb } from "pdf-lib"
+import { PDFDocument, type PDFFont, StandardFonts, degrees, rgb } from "pdf-lib"
 import { fetchInvoiceItems } from "@/lib/invoice-items-query"
 import { fetchDoctorForInvoice, fetchInvoiceById, sanitizePdfText } from "@/lib/invoice-query"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
@@ -26,6 +26,52 @@ type InvoiceItemPayload = {
 
 function invoiceLineAmount(cost: number, offerAmount: number | null) {
   return offerAmount !== null ? offerAmount : cost
+}
+
+/**
+ * Word-wraps text to fit `maxWidth`, measuring with the font it will be drawn
+ * in. A character count cannot do this: the fonts are proportional, so "Illl"
+ * and "WWWW" occupy very different widths at the same length.
+ */
+function wrapTextToWidth(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
+  const words = text.split(/\s+/).filter(Boolean)
+  if (!words.length) return [""]
+
+  const lines: string[] = []
+  let current = ""
+
+  for (const word of words) {
+    if (font.widthOfTextAtSize(word, size) > maxWidth) {
+      // A single word wider than the column — break it mid-word rather than
+      // letting it bleed into the next column.
+      if (current) {
+        lines.push(current)
+        current = ""
+      }
+      let chunk = ""
+      for (const char of word) {
+        if (chunk && font.widthOfTextAtSize(chunk + char, size) > maxWidth) {
+          lines.push(chunk)
+          chunk = char
+        } else {
+          chunk += char
+        }
+      }
+      current = chunk
+      continue
+    }
+
+    const candidate = current ? `${current} ${word}` : word
+    if (font.widthOfTextAtSize(candidate, size) <= maxWidth) {
+      current = candidate
+    } else {
+      lines.push(current)
+      current = word
+    }
+  }
+
+  if (current) lines.push(current)
+  return lines.length ? lines : [""]
 }
 
 const DEFAULT_DOCTOR_QUALIFICATION = process.env.DEFAULT_DOCTOR_QUALIFICATION || "BDS, MDS"
@@ -400,6 +446,30 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     const colPayable = showOfferCol ? tableX + tableWidth - 70 : null
     const colCost = showOfferCol ? null : tableX + tableWidth - 90
 
+    // The treatment name may wrap, so rows are sized from their content rather
+    // than being a fixed height with the name cut short.
+    const treatmentFontSize = 10
+    const treatmentLineHeight = 12
+    const nextColX =
+      showDateCol && colDate !== null
+        ? colDate
+        : showOfferCol && colAmount !== null
+          ? colAmount
+          : (colCost ?? tableX + tableWidth)
+    const treatmentColWidth = Math.max(40, nextColX - colTreatment - 8)
+
+    const treatmentLines = treatmentRows.map((item) =>
+      wrapTextToWidth(
+        sanitizePdfText(item.treatment_name),
+        fontRegular,
+        treatmentFontSize,
+        treatmentColWidth
+      )
+    )
+    const rowHeights = treatmentLines.map((lines) =>
+      Math.max(rowHeight, lines.length * treatmentLineHeight + 14)
+    )
+
     page.drawRectangle({ x: tableX, y: tableY, width: tableWidth, height: rowHeight, color: rgb(0.93, 0.95, 0.98) })
     page.drawText("S.No", { x: colSNo, y: tableY + 10, size: 10, font: fontBold })
     page.drawText("Treatment", { x: colTreatment, y: tableY + 10, size: 10, font: fontBold })
@@ -414,30 +484,37 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       page.drawText("Cost", { x: colCost, y: tableY + 10, size: 10, font: fontBold })
     }
 
+    let cursorY = tableY
     treatmentRows.forEach((item, index) => {
-      const rowY = tableY - rowHeight * (index + 1)
+      const currentRowHeight = rowHeights[index]
+      const rowY = cursorY - currentRowHeight
+      cursorY = rowY
+      // Top-aligned baseline. For a single-line 28pt row this is rowY + 10,
+      // matching the previous fixed layout exactly.
+      const textBaseY = rowY + currentRowHeight - 18
       page.drawRectangle({
         x: tableX,
         y: rowY,
         width: tableWidth,
-        height: rowHeight,
+        height: currentRowHeight,
         borderColor: rgb(0.86, 0.88, 0.9),
         borderWidth: 1,
       })
       page.drawText(String(index + 1), {
         x: colSNo + 4,
-        y: rowY + 10,
+        y: textBaseY,
         size: 10,
         font: fontRegular,
         color: rgb(0.15, 0.15, 0.15),
       })
-      const nameMaxLen = showOfferCol ? (showDateCol ? 18 : 26) : showDateCol ? 40 : 62
-      page.drawText(sanitizePdfText(item.treatment_name).slice(0, nameMaxLen), {
-        x: colTreatment,
-        y: rowY + 10,
-        size: 10,
-        font: fontRegular,
-        color: rgb(0.15, 0.15, 0.15),
+      treatmentLines[index].forEach((line, lineIndex) => {
+        page.drawText(line, {
+          x: colTreatment,
+          y: textBaseY - lineIndex * treatmentLineHeight,
+          size: treatmentFontSize,
+          font: fontRegular,
+          color: rgb(0.15, 0.15, 0.15),
+        })
       })
       if (showDateCol && colDate !== null) {
         const formattedTreatmentDate = item.treatment_date
@@ -448,7 +525,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
           : "-"
         page.drawText(formattedTreatmentDate, {
           x: colDate,
-          y: rowY + 10,
+          y: textBaseY,
           size: 10,
           font: fontRegular,
           color: rgb(0.15, 0.15, 0.15),
@@ -460,21 +537,21 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         const discountPercent = discountValue > 0 && item.cost > 0 ? (discountValue / item.cost) * 100 : 0
         page.drawText(formatCurrency(item.cost), {
           x: colAmount,
-          y: rowY + 10,
+          y: textBaseY,
           size: 10,
           font: fontRegular,
           color: rgb(0.15, 0.15, 0.15),
         })
         page.drawText(discountPercent > 0 ? `${Number(discountPercent.toFixed(2))}%` : "-", {
           x: colDiscount,
-          y: rowY + 10,
+          y: textBaseY,
           size: 10,
           font: fontRegular,
           color: rgb(0.15, 0.15, 0.15),
         })
         page.drawText(formatCurrency(item.line_amount), {
           x: colPayable,
-          y: rowY + 10,
+          y: textBaseY,
           size: 10,
           font: fontRegular,
           color: rgb(0.15, 0.15, 0.15),
@@ -482,7 +559,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       } else if (colCost !== null) {
         page.drawText(formatCurrency(item.line_amount), {
           x: colCost,
-          y: rowY + 10,
+          y: textBaseY,
           size: 10,
           font: fontRegular,
           color: rgb(0.15, 0.15, 0.15),
@@ -493,7 +570,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     // Subtotal and total aligned at table end under the payable column.
     const summaryLabelX = tableX + tableWidth - (showOfferCol ? 160 : 170)
     const summaryValueX = tableX + tableWidth - (showOfferCol ? 70 : 90)
-    const summaryStartY = tableY - rowHeight * (treatmentRows.length + 1) - 22
+    const summaryStartY = cursorY - 50
     page.drawText("Subtotal", {
       x: summaryLabelX,
       y: summaryStartY,

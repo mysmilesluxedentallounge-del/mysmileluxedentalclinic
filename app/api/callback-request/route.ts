@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import nodemailer from "nodemailer"
+import { notifyClinicViaAppsScript } from "@/lib/apps-script-notify"
 import {
   emailDocumentClose,
   emailDocumentOpen,
@@ -16,7 +17,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 })
   }
 
+  // Apps Script sends through the clinic's own Google account, so the callback
+  // still reaches the inbox when SMTP credentials are not configured.
+  const clinicNotification = await notifyClinicViaAppsScript({
+    formType: "callback",
+    name,
+    phone,
+  })
+
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    if (clinicNotification.sent) {
+      return NextResponse.json({ success: true, clinicNotified: true, emailSent: false })
+    }
     console.error("SMTP_USER or SMTP_PASS env vars are not set.")
     return NextResponse.json({ error: "Email service not configured." }, { status: 500 })
   }
@@ -112,10 +124,18 @@ export async function POST(req: NextRequest) {
       attachments,
     })
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({
+      success: true,
+      clinicNotified: clinicNotification.sent,
+      emailSent: true,
+    })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     console.error("Callback mail error:", message)
+    // The clinic already has the request; don't fail the visitor's submission.
+    if (clinicNotification.sent) {
+      return NextResponse.json({ success: true, clinicNotified: true, emailSent: false })
+    }
     return NextResponse.json({ error: `Mail error: ${message}` }, { status: 500 })
   }
 }

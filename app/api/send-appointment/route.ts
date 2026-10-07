@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer"
 import { NextRequest, NextResponse } from "next/server"
+import { notifyClinicViaAppsScript } from "@/lib/apps-script-notify"
 import {
   EMAIL_CLINIC,
   emailDocumentClose,
@@ -162,6 +163,20 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Notify the clinic before the SMTP branch below. Apps Script sends through
+  // the clinic's own Google account, so this still fires when SMTP is unset.
+  const clinicNotification = await notifyClinicViaAppsScript({
+    formType: "appointment",
+    name,
+    email,
+    phone,
+    gender,
+    dob,
+    date,
+    message,
+  });
+  const clinicNotified = clinicNotification.sent;
+
   const hasSmtp = Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
   if (!hasSmtp) {
     console.warn("SMTP_USER or SMTP_PASS not set; appointment saved but no confirmation email sent.");
@@ -169,6 +184,7 @@ export async function POST(req: NextRequest) {
       success: true,
       patientId,
       emailSent: false,
+      clinicNotified,
       message: "Your appointment request was received. Email confirmation is not configured on the server; the clinic will contact you by phone.",
     });
   }
@@ -283,7 +299,7 @@ export async function POST(req: NextRequest) {
       attachments,
     });
 
-    return NextResponse.json({ success: true, patientId, emailSent: true });
+    return NextResponse.json({ success: true, patientId, emailSent: true, clinicNotified });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("Mail send error:", message);
@@ -292,6 +308,7 @@ export async function POST(req: NextRequest) {
         success: true,
         patientId,
         emailSent: false,
+        clinicNotified,
         message: `Your appointment was saved, but the confirmation email could not be sent (${message}). The clinic will still contact you.`,
       },
       { status: 200 }
