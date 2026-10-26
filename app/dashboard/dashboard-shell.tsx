@@ -12,6 +12,7 @@ import {
   FileText,
   LayoutDashboard,
   PiggyBank,
+  Sparkles,
   Stethoscope,
   Users,
   UserRound,
@@ -152,6 +153,15 @@ export default function DashboardShell({ children, profile }: DashboardShellProp
             <FileText size={navIconSize} />
             {!isCollapsed ? "Information" : null}
           </Link>
+          <Link
+            className={sidebarLinkClasses(isNavActive(pathname, "/dashboard/smile-predictions"), isCollapsed)}
+            href="/dashboard/smile-predictions"
+            title="Smile Predictor"
+            aria-current={isNavActive(pathname, "/dashboard/smile-predictions") ? "page" : undefined}
+          >
+            <Sparkles size={navIconSize} />
+            {!isCollapsed ? "Smile Predictor" : null}
+          </Link>
           {profile.role === "admin" ? (
             <>
               <Link
@@ -255,6 +265,13 @@ export default function DashboardShell({ children, profile }: DashboardShellProp
                       aria-current={isNavActive(pathname, "/dashboard/information") ? "page" : undefined}
                     >
                       Information
+                    </Link>
+                    <Link
+                      className={mobileLinkClasses(isNavActive(pathname, "/dashboard/smile-predictions"))}
+                      href="/dashboard/smile-predictions"
+                      aria-current={isNavActive(pathname, "/dashboard/smile-predictions") ? "page" : undefined}
+                    >
+                      Smile Predictor
                     </Link>
                     {profile.role === "admin" ? (
                       <>
