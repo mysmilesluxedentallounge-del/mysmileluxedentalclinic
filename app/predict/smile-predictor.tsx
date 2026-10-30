@@ -415,6 +415,10 @@ export default function SmilePredictor() {
             {submitting ? "Please wait…" : "Continue to camera"}
           </button>
 
+          <p className="-mt-2 text-center text-sm font-medium text-[var(--brand-dark)]">
+            Click to get your smile transformation now
+          </p>
+
           <p className="flex items-start gap-2 text-xs leading-relaxed text-[var(--grey-mid)]">
             <ShieldCheck size={15} className="mt-0.5 shrink-0" />
             Your photo is processed entirely on your own device and is never uploaded or stored.

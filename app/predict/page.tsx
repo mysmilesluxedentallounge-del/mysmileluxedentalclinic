@@ -1,13 +1,5 @@
 import Link from "next/link"
-import {
-  CalendarCheck,
-  Camera,
-  ClipboardList,
-  Lock,
-  ShieldCheck,
-  Sparkles,
-  Timer,
-} from "lucide-react"
+import { CalendarCheck, Lock, ShieldCheck, Timer } from "lucide-react"
 import SmilePredictor from "./smile-predictor"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
@@ -29,24 +21,6 @@ async function fetchPredictionCount(): Promise<number | null> {
     return null
   }
 }
-
-const STEPS = [
-  {
-    icon: ClipboardList,
-    title: "1. Tell us who you are",
-    body: "Just your name and number so our smile team can share your personalised plan afterwards.",
-  },
-  {
-    icon: Camera,
-    title: "2. Smile at your camera",
-    body: "Line your smile up inside the on-screen guide in good light, then tap capture. Nothing is uploaded.",
-  },
-  {
-    icon: Sparkles,
-    title: "3. See your brighter smile",
-    body: "We generate an instant before-and-after preview you can download and bring to your consultation.",
-  },
-]
 
 const BENEFITS = [
   {
@@ -126,32 +100,8 @@ export default async function PredictPage() {
         </div>
       </section>
 
-      {/* How to use */}
-      <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <h2
-          className="mb-8 text-center text-2xl font-bold sm:text-3xl"
-          style={{ fontFamily: "var(--font-playfair)" }}
-        >
-          How to use the Smile Predictor
-        </h2>
-        <ol className="grid gap-5 sm:grid-cols-3">
-          {STEPS.map((step) => (
-            <li
-              key={step.title}
-              className="rounded-xl border border-black/10 bg-white p-6 text-center shadow-sm"
-            >
-              <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--yellow-lightest)]">
-                <step.icon size={22} className="text-[var(--brand-dark)]" />
-              </span>
-              <h3 className="mb-2 text-base font-semibold">{step.title}</h3>
-              <p className="text-sm leading-relaxed text-[var(--grey-mid)]">{step.body}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-
       {/* The tool */}
-      <section id="start" className="mx-auto max-w-2xl px-4 pb-14 sm:px-6">
+      <section id="start" className="mx-auto max-w-2xl px-4 pb-14 pt-10 sm:px-6">
         <SmilePredictor />
       </section>
 
